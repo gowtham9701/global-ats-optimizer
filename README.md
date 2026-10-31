@@ -1,5 +1,9 @@
 # 🌍 Global ATS Resume Optimizer & Agentic Architect
 
+[![CI](https://github.com/gowtham9701/global-ats-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/gowtham9701/global-ats-optimizer/actions/workflows/ci.yml)
+[![Deploy](https://github.com/gowtham9701/global-ats-optimizer/actions/workflows/deploy.yml/badge.svg)](https://github.com/gowtham9701/global-ats-optimizer/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A **self-hosted, open-source, zero-cost** full-stack application that turns any resume into
 an ATS-optimized, country-localized, beautifully re-rendered PDF — powered by an **agentic
 AI workflow** with **RAG** grounding.
