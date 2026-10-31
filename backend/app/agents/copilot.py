@@ -28,6 +28,11 @@ EDIT_INTENT = re.compile(
     r"\b(improve|rewrite|optimi[sz]e|enhance|fix|strengthen|apply|make it better|"
     r"polish|boost|upgrade|refine|tailor|add keywords?)\b", re.I
 )
+# Advice/question phrasing should be answered, not trigger a silent rewrite.
+ADVICE_INTENT = re.compile(
+    r"\b(tips?|advice|suggest|recommend|how (do|should|can|would) i|what should|"
+    r"give me|show me|explain|should i)\b|\?\s*$", re.I
+)
 SCORE_INTENT = re.compile(r"\b(score|ats|rating|how good|evaluate|assess|grade)\b", re.I)
 KEYWORD_INTENT = re.compile(r"\b(keyword|missing|match|job description|jd)\b", re.I)
 SUGGEST_CHIPS = [
@@ -133,7 +138,8 @@ def chat(messages: List[ChatMessage], resume_text: str, parsed: Optional[ParsedR
     g = _grounding(effective_text, job_description, country)
 
     # Edit intent → apply modifications and return the updated resume.
-    if EDIT_INTENT.search(user_msg):
+    # Advice/question phrasing (e.g. "give me tips to improve") is answered instead.
+    if EDIT_INTENT.search(user_msg) and not ADVICE_INTENT.search(user_msg):
         improved, changes, source = improve_resume(
             current_parsed, job_description, country, instruction=user_msg
         )

@@ -64,6 +64,7 @@ def root() -> dict:
         "version": settings.APP_VERSION,
         "llm_provider": settings.LLM_PROVIDER,
         "llm_live": llm.is_live,
+        "llm_model": getattr(llm, "_model_name", None) if llm.is_live else None,
         "docs": "/docs",
     }
 

@@ -30,6 +30,7 @@ class LLMProvider:
     def __init__(self) -> None:
         self.provider = settings.LLM_PROVIDER
         self._gemini_model = None
+        self._model_name = settings.GEMINI_MODEL
         if self.provider == "gemini" and settings.GEMINI_API_KEY:
             self._init_gemini()
 
@@ -38,12 +39,50 @@ class LLMProvider:
             import google.generativeai as genai
 
             genai.configure(api_key=settings.GEMINI_API_KEY)
-            self._gemini_model = genai.GenerativeModel(settings.GEMINI_MODEL)
-            logger.info("Gemini provider initialised with model %s", settings.GEMINI_MODEL)
+            model_name = self._select_model(genai, settings.GEMINI_MODEL)
+            self._gemini_model = genai.GenerativeModel(model_name)
+            self._model_name = model_name
+            logger.info("Gemini provider initialised with model %s", model_name)
         except Exception as exc:  # pragma: no cover - defensive
             logger.warning("Failed to init Gemini, falling back to heuristic: %s", exc)
             self._gemini_model = None
             self.provider = "heuristic"
+
+    @staticmethod
+    def _select_model(genai, configured: str) -> str:
+        """Pick a usable Gemini model for this API key.
+
+        Older models (e.g. gemini-1.5-flash) get retired over time, which makes
+        a hardcoded name 404. We query the models available to the key and pick
+        the best match by preference, so the app self-heals across deprecations.
+        Falls back to the configured name if listing is unavailable.
+        """
+        preference = [
+            configured,
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-flash-latest",
+            "gemini-2.5-pro",
+        ]
+        try:
+            available = []
+            for m in genai.list_models():
+                methods = getattr(m, "supported_generation_methods", []) or []
+                if "generateContent" in methods:
+                    # Names come back like "models/gemini-2.0-flash".
+                    available.append(m.name.split("/", 1)[-1])
+            if not available:
+                return configured
+            # Honour the preference order first.
+            for want in preference:
+                if want and want in available:
+                    return want
+            # Otherwise prefer any available "flash" model (cheapest/free-tier).
+            flash = [a for a in available if "flash" in a and "latest" not in a]
+            return (flash or available)[0]
+        except Exception as exc:  # pragma: no cover - network/listing safety
+            logger.warning("Gemini model listing failed (%s); using configured '%s'.", exc, configured)
+            return configured
 
     @property
     def is_live(self) -> bool:
