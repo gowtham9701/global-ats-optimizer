@@ -1,0 +1,62 @@
+[
+  {
+    "id": "ats-general-1",
+    "country": "global",
+    "topic": "ats-parsing",
+    "text": "Applicant Tracking Systems parse resumes top to bottom and struggle with tables, text boxes, headers/footers, images and multi-column layouts. Use a single-column layout, standard section headings (Summary, Experience, Education, Skills), and a common font. Save as PDF generated from text (not scanned)."
+  },
+  {
+    "id": "ats-general-2",
+    "country": "global",
+    "topic": "keywords",
+    "text": "Mirror the exact keywords and hard skills from the job description, including both the acronym and the expanded form (e.g. 'CI/CD' and 'Continuous Integration'). Keyword density matters but avoid keyword stuffing; integrate terms naturally into achievement bullets."
+  },
+  {
+    "id": "ats-general-3",
+    "country": "global",
+    "topic": "impact",
+    "text": "Every experience bullet should follow the formula: Action Verb + Task + Quantified Result. Example: 'Reduced API latency by 42% by introducing Redis caching for 2M daily requests.' Quantifiable metrics (%, $, time, scale) dramatically increase recruiter response and ATS impact scoring."
+  },
+  {
+    "id": "germany-1",
+    "country": "germany",
+    "topic": "structure",
+    "text": "A German CV (Lebenslauf) is typically tabular and reverse-chronological. Standard order: Personal details, Professional Experience (Berufserfahrung), Education (Ausbildung), Skills (Kenntnisse), Languages (Sprachen), and optionally Interests. German employers expect precise dates (MM/YYYY) for every entry and no employment gaps left unexplained."
+  },
+  {
+    "id": "germany-2",
+    "country": "germany",
+    "topic": "privacy",
+    "text": "Modern German applications increasingly follow anti-discrimination (AGG) norms: a photo, date of birth, marital status, nationality and religion are optional and can be omitted for a cleaner, anonymous application. However a dated signature (place, date, name) at the bottom is still traditional for many roles."
+  },
+  {
+    "id": "india-1",
+    "country": "india",
+    "topic": "structure",
+    "text": "Indian resumes often include dense personal details (father's name, date of birth, marital status, full address, nationality, languages, declaration). For international ATS applications these personal fields should be removed to protect privacy and match Western anonymised standards, keeping only name and professional contact details."
+  },
+  {
+    "id": "usa-1",
+    "country": "usa",
+    "topic": "structure",
+    "text": "US resumes are one page for early career, two pages maximum for senior roles. Never include a photo, age, marital status or nationality (to comply with EEO). Lead with a concise professional summary, then Experience, Skills and Education. Focus heavily on quantified achievements."
+  },
+  {
+    "id": "uk-1",
+    "country": "uk",
+    "topic": "structure",
+    "text": "A UK CV is up to two pages, reverse-chronological, with a short personal profile at the top. No photo, date of birth or marital status. British spelling is expected (organise, optimise, programme). References can be stated as 'available on request'."
+  },
+  {
+    "id": "canada-1",
+    "country": "canada",
+    "topic": "structure",
+    "text": "Canadian resumes exclude personal information such as photo, age, SIN, and marital status. One to two pages, reverse-chronological, with a skills summary. Bilingual (English/French) ability is a valued asset to highlight when relevant."
+  },
+  {
+    "id": "metrics-1",
+    "country": "global",
+    "topic": "metrics",
+    "text": "Good metrics to quantify achievements: percentage improvements, revenue generated or saved, number of users/customers served, team size led, time reduced, uptime/SLA achieved, defects reduced, and throughput increased. Even estimates are stronger than no number at all."
+  }
+]

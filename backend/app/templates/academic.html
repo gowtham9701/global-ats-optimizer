@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: Georgia, "Times New Roman", serif; color: #1f2937; font-size: 10.5pt; line-height: 1.55; }
+  .name { font-size: 20pt; font-weight: bold; margin: 0; color: #111827; }
+  .subtitle { font-size: 10pt; color: {{ accent_color }}; font-style: italic; margin: 2px 0 6px; }
+  .contact { font-size: 9pt; color: #4b5563; }
+  .contact span { display: block; }
+  .rule { border: none; border-top: 1.5px solid {{ accent_color }}; margin: 10px 0 14px; }
+  .section-title { font-size: 11.5pt; font-weight: bold; color: {{ accent_color }};
+    margin: 16px 0 4px; }
+  .entry { margin-bottom: 6px; }
+  ul { margin: 4px 0 10px 0; padding-left: 18px; }
+  li { margin-bottom: 4px; text-align: justify; }
+</style>
+</head>
+<body>
+  <p class="name">{{ contact.name or "Your Name" }}</p>
+  <p class="subtitle">Curriculum Vitae</p>
+  <div class="contact">
+    {% if contact.email %}<span>Email: {{ contact.email }}</span>{% endif %}
+    {% if contact.phone %}<span>Phone: {{ contact.phone }}</span>{% endif %}
+    {% for link in contact.links %}<span>{{ link }}</span>{% endfor %}
+  </div>
+  <hr class="rule" />
+  {% for section in sections %}
+    <div class="section-title">{{ section.title }}</div>
+    <ul>
+      {% for line in section.lines %}
+        <li>{{ line }}</li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+</body>
+</html>
