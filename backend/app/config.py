@@ -16,7 +16,10 @@ load_dotenv()
 
 
 def _split_csv(value: str) -> List[str]:
-    return [item.strip() for item in value.split(",") if item.strip()]
+    # Normalise origins: trim whitespace and drop any trailing slash so a value
+    # like "https://app.vercel.app/" still matches the browser Origin header
+    # ("https://app.vercel.app"), which never includes a trailing slash.
+    return [item.strip().rstrip("/") for item in value.split(",") if item.strip()]
 
 
 class Settings:
