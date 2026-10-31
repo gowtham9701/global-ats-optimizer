@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend import & smoke check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Import & smoke test
+        run: |
+          python - <<'PY'
+          import app.main as m
+          from app.services.resume_builder import generate_resume
+          from app.services.resume_improver import improve_resume
+          from app.agents.copilot import chat
+          from app.models.schemas import ChatMessage
+          r = generate_resume("Python dev, built API for 2M users, Docker, Kubernetes", "usa", "A", "a@b.com", "123")
+          res = chat([ChatMessage(role="user", content="improve my resume")], r.resume_text, r.parsed, "", "usa")
+          assert res.did_edit and res.updated_parsed, "copilot edit failed"
+          paths = sorted(p.path for p in m.app.routes if getattr(p, "path", "").startswith("/api"))
+          assert "/api/chat" in paths, paths
+          print("Backend OK:", paths)
+          PY
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build

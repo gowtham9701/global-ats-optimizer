@@ -141,6 +141,41 @@ EMBEDDINGS_BACKEND=sentence-transformers
 
 ---
 
+## 🔄 Automated CI/CD (GitHub Actions)
+
+Two workflows ship in [`.github/workflows`](.github/workflows):
+
+- **`ci.yml`** — on every push/PR to `main`: builds the frontend and runs a backend
+  import + copilot smoke test. No secrets required.
+- **`deploy.yml`** — on push to `main` (or manual *Run workflow*): triggers a Render
+  backend deploy and a Vercel frontend deploy. Each deploy step **skips gracefully**
+  if its secrets are not configured, so nothing breaks before you set them up.
+
+### One-time setup
+
+Add these under **GitHub → repo → Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret | Used for | How to get it |
+|---|---|---|
+| `RENDER_DEPLOY_HOOK` | Backend deploy | Render service → **Settings → Deploy Hook** → copy the URL |
+| `VERCEL_TOKEN` | Frontend deploy | Vercel → **Account Settings → Tokens → Create** |
+| `VERCEL_ORG_ID` | Frontend deploy | Run `vercel link` in `frontend/` → see `.vercel/project.json` (`orgId`) |
+| `VERCEL_PROJECT_ID` | Frontend deploy | Same `.vercel/project.json` (`projectId`) |
+
+Notes:
+- Create the Render service once from `backend/render.yaml` (Blueprint) and the Vercel
+  project once with **Root Directory = `frontend`**; the workflow then redeploys them automatically.
+- Set `VITE_API_BASE` (your Render URL) in the **Vercel project's** Production env vars —
+  it is a build-time variable consumed during `vercel build`.
+- To get `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` locally:
+  ```bash
+  cd frontend
+  npx vercel link        # links to your Vercel project
+  cat .vercel/project.json
+  ```
+
+---
+
 ## 🔌 API Reference
 
 | Method | Endpoint | Purpose |
