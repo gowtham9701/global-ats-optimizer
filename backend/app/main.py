@@ -74,6 +74,11 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/api/llm-diagnostics")
+def llm_diagnostics() -> dict:
+    return get_llm().diagnose()
+
+
 @app.get("/api/templates")
 def templates() -> list:
     return list_templates()

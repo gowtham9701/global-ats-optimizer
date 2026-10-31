@@ -59,9 +59,10 @@ class LLMProvider:
         """
         preference = [
             configured,
-            "gemini-2.5-flash",
             "gemini-2.0-flash",
             "gemini-flash-latest",
+            "gemini-2.0-flash-001",
+            "gemini-2.5-flash",
             "gemini-2.5-pro",
         ]
         try:
@@ -108,9 +109,61 @@ class LLMProvider:
         full = prompt if not system else f"{system}\n\n{prompt}"
         response = self._gemini_model.generate_content(
             full,
-            generation_config={"temperature": temperature},
+            generation_config={"temperature": temperature, "max_output_tokens": 2048},
         )
-        return (response.text or "").strip()
+        return self._extract_text(response)
+
+    @staticmethod
+    def _extract_text(response) -> str:
+        """Safely pull text from a Gemini response.
+
+        The ``response.text`` quick accessor raises on multi-part, blocked, or
+        "thinking" model responses, so we fall back to concatenating the text
+        parts of the first candidate.
+        """
+        try:
+            txt = response.text
+            if txt:
+                return txt.strip()
+        except Exception:
+            pass
+        try:
+            out = []
+            for cand in getattr(response, "candidates", []) or []:
+                content = getattr(cand, "content", None)
+                for part in getattr(content, "parts", []) or []:
+                    piece = getattr(part, "text", "") or ""
+                    if piece:
+                        out.append(piece)
+            return "".join(out).strip()
+        except Exception:
+            return ""
+
+    def diagnose(self) -> dict:
+        """Return diagnostics for the configured provider (safe to expose).
+
+        Attempts a tiny generation and reports the result, finish reason, or the
+        exact error — without ever revealing the API key.
+        """
+        info = {
+            "provider": self.provider,
+            "is_live": self.is_live,
+            "model": getattr(self, "_model_name", None),
+        }
+        if self.provider == "gemini" and self._gemini_model is not None:
+            try:
+                resp = self._gemini_model.generate_content(
+                    "Reply with exactly: OK",
+                    generation_config={"temperature": 0, "max_output_tokens": 100},
+                )
+                info["raw_text"] = self._extract_text(resp)
+                try:
+                    info["finish_reason"] = str(resp.candidates[0].finish_reason)
+                except Exception:
+                    pass
+            except Exception as exc:
+                info["error"] = f"{type(exc).__name__}: {exc}"
+        return info
 
     def _generate_ollama(self, prompt: str, system: Optional[str], temperature: float) -> str:
         payload = {
