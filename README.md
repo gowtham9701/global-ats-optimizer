@@ -14,6 +14,19 @@ Built to run **100% free**: it works out-of-the-box with a deterministic heurist
 
 ---
 
+## 🔗 Live Demo
+
+| | URL |
+|---|---|
+| 🖥️ **App (frontend · Vercel)** | https://global-ats-optimizer.vercel.app |
+| ⚙️ **API (backend · Render)** | https://global-ats-optimizer-api.onrender.com |
+| 📘 **Interactive API docs** | https://global-ats-optimizer-api.onrender.com/docs |
+
+> The backend runs on Render's free tier, which sleeps when idle — the **first request may take
+> ~30–60s to wake**, then it's fast.
+
+---
+
 ## ✨ Features
 
 | Feature | Description |
@@ -38,7 +51,7 @@ Built to run **100% free**: it works out-of-the-box with a deterministic heurist
 global-ats-optimizer/
 ├── backend/                      # FastAPI + agentic AI + RAG + PDF
 │   ├── app/
-│   │   ├── main.py               # API: /upload /analyze /localize /generate-pdf
+│   │   ├── main.py               # API: upload, analyze, localize, generate-pdf, generate-resume, chat
 │   │   ├── config.py             # env-driven settings (provider fallback)
 │   │   ├── models/schemas.py     # Pydantic models
 │   │   ├── services/
@@ -129,19 +142,24 @@ EMBEDDINGS_BACKEND=sentence-transformers
 
 ## ☁️ Deployment
 
+> **Live instance:** frontend on Vercel → https://global-ats-optimizer.vercel.app,
+> backend on Render → https://global-ats-optimizer-api.onrender.com.
+
 ### Backend → Render (free)
-- Push this repo to GitHub.
 - On Render: **New → Blueprint**, pick the repo (it reads `backend/render.yaml`), or create a
   **Web Service** with root `backend/`, build `pip install -r requirements.txt`,
   start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-- Set env vars (e.g. `CORS_ORIGINS` = your Vercel URL, optional `GEMINI_API_KEY`).
+- Set env var `CORS_ORIGINS` = your Vercel URL (e.g. `https://global-ats-optimizer.vercel.app`),
+  and optionally `LLM_PROVIDER=gemini` + `GEMINI_API_KEY` to enable AI.
 
 ### Frontend → Vercel (free)
 - On Vercel: **New Project**, root directory `frontend/`.
-- Add env var `VITE_API_BASE` = your Render backend URL (e.g. `https://xxx.onrender.com`).
+- Add env var `VITE_API_BASE` = your Render backend URL
+  (e.g. `https://global-ats-optimizer-api.onrender.com`).
 - Deploy. `vercel.json` handles the SPA rewrites.
 
-> The backend CORS config already allows any `*.vercel.app` origin plus whatever you set in `CORS_ORIGINS`.
+> The backend CORS config already allows any `*.vercel.app` origin plus whatever you set in
+> `CORS_ORIGINS` (trailing slashes are stripped automatically).
 
 ---
 
