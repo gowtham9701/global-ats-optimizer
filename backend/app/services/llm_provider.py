@@ -53,46 +53,40 @@ class LLMProvider:
     def _select_model(genai, configured: str) -> str:
         """Pick a usable Gemini model for this API key.
 
-        Older models (e.g. gemini-1.5-flash) get retired over time, which makes
-        a hardcoded name 404. We query the models available to the key and pick
-        a stable, text-capable model with a generous free-tier quota — avoiding
-        ``*-latest`` aliases (which drift to the newest, lowest-quota models)
-        and non-text/specialty variants (image, tts, robotics, etc.).
-        Falls back to the configured name if listing is unavailable.
+        Google retires older models and increasingly restricts **new** API keys
+        to only the newest models (e.g. a new key may list ``gemini-2.5-flash``
+        yet get a 404 "no longer available to new users", being pushed to the
+        latest ``gemini-3.x-flash``). To stay usable across these changes we pick
+        the **newest** plain text ``gemini-X.Y-flash[-lite]`` model available to
+        the key, skipping ``*-latest`` aliases and specialty variants
+        (image/tts/robotics/etc). An explicit ``GEMINI_MODEL`` always wins.
         """
-        # Explicit, stable preference. 2.5-flash / flash-lite have the best
-        # free-tier request quotas for everyday text generation.
-        preference = [
-            configured,
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-lite",
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-001",
-            "gemini-2.5-pro",
-        ]
-        # Substrings that indicate non-text or quota-volatile models to skip.
         skip = ("latest", "preview", "tts", "image", "robotics", "lyria",
                 "nano", "deep-research", "antigravity", "computer-use",
                 "gemma", "transcribe", "omni", "argon")
-        plain_flash = re.compile(r"^gemini-\d+(?:\.\d+)?-flash(?:-lite)?$")
+        plain_flash = re.compile(r"^gemini-(\d+(?:\.\d+)?)-flash(-lite)?$")
         try:
             available = []
             for m in genai.list_models():
                 methods = getattr(m, "supported_generation_methods", []) or []
                 if "generateContent" in methods:
-                    # Names come back like "models/gemini-2.5-flash".
                     available.append(m.name.split("/", 1)[-1])
             if not available:
                 return configured
-            # 1) Honour the explicit preference order.
-            for want in preference:
-                if want and want in available:
-                    return want
-            # 2) Any plain "gemini-X.Y-flash[-lite]" (no specialty suffixes).
-            plain = [a for a in available if plain_flash.match(a)]
-            if plain:
-                return sorted(plain)[0]
-            # 3) Any flash model that isn't a specialty/volatile variant.
+            # An explicit, available configured model always wins.
+            if configured and configured in available:
+                return configured
+            # Rank plain flash models: newest version first; at the same
+            # version prefer the "-lite" variant (higher free-tier throughput).
+            ranked = []
+            for a in available:
+                mm = plain_flash.match(a)
+                if mm:
+                    ranked.append((float(mm.group(1)), bool(mm.group(2)), a))
+            if ranked:
+                ranked.sort(key=lambda x: (x[0], x[1]), reverse=True)
+                return ranked[0][2]
+            # Fallback: any non-specialty flash, else the first available model.
             safe = [a for a in available if "flash" in a and not any(s in a for s in skip)]
             return (safe or available)[0]
         except Exception as exc:  # pragma: no cover - network/listing safety
