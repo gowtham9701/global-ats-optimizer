@@ -116,12 +116,25 @@ The app runs fully without any model. To enable richer AI narratives/rewrites:
 
 ### Option A — Google Gemini (free tier)
 1. Get a free key: https://aistudio.google.com/app/apikey
-2. In `backend/.env`:
+2. Set env vars (locally in `backend/.env`, or in the Render dashboard):
    ```
    LLM_PROVIDER=gemini
    GEMINI_API_KEY=your_key_here
    ```
-3. `pip install google-generativeai` (uncomment in requirements.txt)
+3. `google-generativeai` is already in `requirements.txt`, so no extra install is needed.
+
+The app **auto-selects the newest usable Gemini flash model** for your key
+(e.g. `gemini-3.8-flash`) — no model name to configure. You can still pin one
+with `GEMINI_MODEL=...` if you want. Verify at `GET /api/llm-diagnostics`
+(it lists the available models without consuming quota).
+
+> **Free-tier limits:** a new Gemini free key allows only the latest model, which
+> currently permits **~20 generate requests/day**. Within that budget you get
+> real AI-written narratives, rewrites and resume generation. **Beyond the daily
+> cap, the app automatically falls back to the built-in heuristic engine** (a
+> `429` is handled gracefully), so it keeps working — just without the LLM flourish.
+> For higher limits, enable billing on your Google Cloud project, or use **Ollama**
+> locally (Option B) for unlimited, fully free generation.
 
 ### Option B — Ollama (local open-source models)
 1. Install Ollama: https://ollama.com

@@ -75,7 +75,9 @@ def health() -> dict:
 
 
 @app.get("/api/llm-diagnostics")
-def llm_diagnostics(test_generate: bool = True) -> dict:
+def llm_diagnostics(test_generate: bool = False) -> dict:
+    # test_generate defaults to False so this endpoint never consumes the
+    # free-tier generation quota unless explicitly requested (?test_generate=true).
     return get_llm().diagnose(test_generate=test_generate)
 
 
