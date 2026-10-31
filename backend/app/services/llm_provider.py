@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Optional
 
 import httpx
@@ -54,33 +55,46 @@ class LLMProvider:
 
         Older models (e.g. gemini-1.5-flash) get retired over time, which makes
         a hardcoded name 404. We query the models available to the key and pick
-        the best match by preference, so the app self-heals across deprecations.
+        a stable, text-capable model with a generous free-tier quota — avoiding
+        ``*-latest`` aliases (which drift to the newest, lowest-quota models)
+        and non-text/specialty variants (image, tts, robotics, etc.).
         Falls back to the configured name if listing is unavailable.
         """
+        # Explicit, stable preference. 2.5-flash / flash-lite have the best
+        # free-tier request quotas for everyday text generation.
         preference = [
             configured,
-            "gemini-2.0-flash",
-            "gemini-flash-latest",
-            "gemini-2.0-flash-001",
             "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-001",
             "gemini-2.5-pro",
         ]
+        # Substrings that indicate non-text or quota-volatile models to skip.
+        skip = ("latest", "preview", "tts", "image", "robotics", "lyria",
+                "nano", "deep-research", "antigravity", "computer-use",
+                "gemma", "transcribe", "omni", "argon")
+        plain_flash = re.compile(r"^gemini-\d+(?:\.\d+)?-flash(?:-lite)?$")
         try:
             available = []
             for m in genai.list_models():
                 methods = getattr(m, "supported_generation_methods", []) or []
                 if "generateContent" in methods:
-                    # Names come back like "models/gemini-2.0-flash".
+                    # Names come back like "models/gemini-2.5-flash".
                     available.append(m.name.split("/", 1)[-1])
             if not available:
                 return configured
-            # Honour the preference order first.
+            # 1) Honour the explicit preference order.
             for want in preference:
                 if want and want in available:
                     return want
-            # Otherwise prefer any available "flash" model (cheapest/free-tier).
-            flash = [a for a in available if "flash" in a and "latest" not in a]
-            return (flash or available)[0]
+            # 2) Any plain "gemini-X.Y-flash[-lite]" (no specialty suffixes).
+            plain = [a for a in available if plain_flash.match(a)]
+            if plain:
+                return sorted(plain)[0]
+            # 3) Any flash model that isn't a specialty/volatile variant.
+            safe = [a for a in available if "flash" in a and not any(s in a for s in skip)]
+            return (safe or available)[0]
         except Exception as exc:  # pragma: no cover - network/listing safety
             logger.warning("Gemini model listing failed (%s); using configured '%s'.", exc, configured)
             return configured
