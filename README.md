@@ -18,6 +18,7 @@ Built to run **100% free**: it works out-of-the-box with a deterministic heurist
 | **Resume Creator** | Build a resume three ways — **generate from a plain-text prompt/description**, **import a PDF/DOCX**, or **start blank** — then edit everything live in the UI. |
 | **Live In-UI Editor** | Edit contact fields and every section/bullet directly; edits instantly become the "latest result" re-fed into the scoring model. Live preview + **Download PDF pinned to the top toolbar**. |
 | **ATS Verification Everywhere** | A reusable **Verify ATS Score** control appears throughout the flow (Home, Builder toolbar, Dashboard) so compatibility is checked at every step. |
+| **Conversational AI Copilot** | A global side-panel chat that answers questions, checks your ATS score, finds missing keywords, and **rewrites your resume on request** — one click applies the changes straight into the editor. Uses the LLM when configured, with a capable deterministic fallback. |
 | **ATS Scoring & Deep Diagnostics** | A benchmark score **/100** from 5 weighted components: keyword density, formatting, quantifiable metrics, impact verbs, structure. |
 | **Key Line Highlighter** | Color-codes every line 🟢 high-impact / 🟡 needs-metrics / 🔴 weak-phrasing, with inline replacement suggestions. |
 | **Agentic AI Tools** | An agent orchestrates custom tools: **Keyword Matcher**, **Action-Verb Enhancer**, **Formatter**, **Line Profiler**, **Structural Localizer**. |
@@ -146,6 +147,7 @@ EMBEDDINGS_BACKEND=sentence-transformers
 |---|---|---|
 | `POST` | `/api/upload` | Parse an uploaded PDF/DOCX/TXT into a semantic resume |
 | `POST` | `/api/generate-resume` | Create a structured resume from a free-text prompt/description |
+| `POST` | `/api/chat` | Conversational copilot: answers + can rewrite the resume and return the updated structure |
 | `POST` | `/api/analyze` | Run the agentic ATS analysis (score, highlights, keywords, RAG) |
 | `POST` | `/api/localize` | Convert a resume to another country's conventions |
 | `POST` | `/api/generate-pdf` | Render a parsed resume to a styled PDF |

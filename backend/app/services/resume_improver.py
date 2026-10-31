@@ -23,10 +23,20 @@ def _strengthen_line(line: str) -> Tuple[str, bool]:
     out = line
     lowered = out.lower()
     for weak, strong in ACTION_VERB_MAP.items():
-        if re.search(r"\b" + re.escape(weak) + r"\b", lowered):
-            out = re.sub(r"\b" + re.escape(weak) + r"\b", strong, out, count=1, flags=re.I)
-            changed = True
-            lowered = out.lower()
+        pattern = re.compile(r"\b" + re.escape(weak) + r"\b", re.I)
+        m = pattern.search(out)
+        if not m:
+            continue
+
+        def _replace(match: "re.Match") -> str:
+            # Capitalize only when the verb starts the bullet (after an optional
+            # "- " marker); keep it lowercase mid-sentence for correct grammar.
+            prefix = out[: match.start()].lstrip("-• \t")
+            return strong if prefix == "" else strong[0].lower() + strong[1:]
+
+        out = pattern.sub(_replace, out, count=1)
+        changed = True
+        lowered = out.lower()
     # Prompt to quantify if there is no number anywhere in the bullet.
     if changed and not re.search(r"\d", out) and "quantify" not in lowered:
         out = out.rstrip(". ") + " — quantify the impact (e.g. by 30%)."
