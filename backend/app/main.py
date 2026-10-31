@@ -75,8 +75,8 @@ def health() -> dict:
 
 
 @app.get("/api/llm-diagnostics")
-def llm_diagnostics() -> dict:
-    return get_llm().diagnose()
+def llm_diagnostics(test_generate: bool = True) -> dict:
+    return get_llm().diagnose(test_generate=test_generate)
 
 
 @app.get("/api/templates")

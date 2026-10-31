@@ -139,10 +139,11 @@ class LLMProvider:
         except Exception:
             return ""
 
-    def diagnose(self) -> dict:
+    def diagnose(self, *, test_generate: bool = True) -> dict:
         """Return diagnostics for the configured provider (safe to expose).
 
-        Attempts a tiny generation and reports the result, finish reason, or the
+        Lists the models available to the key (no quota cost) and optionally
+        attempts a tiny generation, reporting the result, finish reason, or the
         exact error — without ever revealing the API key.
         """
         info = {
@@ -152,17 +153,28 @@ class LLMProvider:
         }
         if self.provider == "gemini" and self._gemini_model is not None:
             try:
-                resp = self._gemini_model.generate_content(
-                    "Reply with exactly: OK",
-                    generation_config={"temperature": 0, "max_output_tokens": 100},
-                )
-                info["raw_text"] = self._extract_text(resp)
-                try:
-                    info["finish_reason"] = str(resp.candidates[0].finish_reason)
-                except Exception:
-                    pass
+                import google.generativeai as genai
+
+                info["available_models"] = [
+                    m.name.split("/", 1)[-1]
+                    for m in genai.list_models()
+                    if "generateContent" in (getattr(m, "supported_generation_methods", []) or [])
+                ]
             except Exception as exc:
-                info["error"] = f"{type(exc).__name__}: {exc}"
+                info["list_error"] = f"{type(exc).__name__}: {exc}"
+            if test_generate:
+                try:
+                    resp = self._gemini_model.generate_content(
+                        "Reply with exactly: OK",
+                        generation_config={"temperature": 0, "max_output_tokens": 100},
+                    )
+                    info["raw_text"] = self._extract_text(resp)
+                    try:
+                        info["finish_reason"] = str(resp.candidates[0].finish_reason)
+                    except Exception:
+                        pass
+                except Exception as exc:
+                    info["error"] = f"{type(exc).__name__}: {exc}"
         return info
 
     def _generate_ollama(self, prompt: str, system: Optional[str], temperature: float) -> str:
