@@ -28,8 +28,23 @@ class Settings:
     APP_NAME: str = "Global ATS Resume Optimizer & Agentic Architect"
     APP_VERSION: str = "1.0.0"
 
-    # LLM provider: "gemini", "ollama", or "heuristic" (no external model).
+    # LLM provider: "openrouter", "gemini", "ollama", or "heuristic" (no external model).
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "heuristic").lower()
+
+    # OpenRouter (unified OpenAI-compatible API, many free models).
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_BASE_URL: str = os.getenv(
+        "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+    )
+    OPENROUTER_MODEL: str = os.getenv(
+        "OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free"
+    )
+    # Ordered fallbacks tried when the primary model errors or is rate-limited.
+    OPENROUTER_FALLBACK_MODELS: List[str] = _split_csv(
+        os.getenv("OPENROUTER_FALLBACK_MODELS", "")
+    )
+    OPENROUTER_SITE_URL: str = os.getenv("OPENROUTER_SITE_URL", "http://localhost:5173")
+    OPENROUTER_APP_NAME: str = os.getenv("OPENROUTER_APP_NAME", "Global ATS Optimizer")
 
     # Google Gemini (free tier).
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
@@ -40,6 +55,10 @@ class Settings:
     # Ollama local models (fully open-source, zero cost).
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3")
+
+    # Neon / Postgres database (optional). When unset the app runs without
+    # persistence; when set, score history and chat sessions are stored.
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
 
     # Embeddings for RAG. "tfidf" is pure-python-friendly and deployment safe.
     EMBEDDINGS_BACKEND: str = os.getenv("EMBEDDINGS_BACKEND", "tfidf").lower()
@@ -56,11 +75,17 @@ class Settings:
 
     @property
     def llm_enabled(self) -> bool:
+        if self.LLM_PROVIDER == "openrouter":
+            return bool(self.OPENROUTER_API_KEY)
         if self.LLM_PROVIDER == "gemini":
             return bool(self.GEMINI_API_KEY)
         if self.LLM_PROVIDER == "ollama":
             return True
         return False
+
+    @property
+    def db_enabled(self) -> bool:
+        return bool(self.DATABASE_URL)
 
 
 @lru_cache

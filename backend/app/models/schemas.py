@@ -60,6 +60,9 @@ class AnalyzeRequest(BaseModel):
     resume_text: str
     job_description: str = ""
     target_country: str = "global"
+    session_id: str = ""
+    template: str = ""
+    word_count: int = 0
 
 
 class LocalizeRequest(BaseModel):
@@ -114,6 +117,26 @@ class ChatRequest(BaseModel):
     parsed: Optional[ParsedResume] = None
     job_description: str = ""
     target_country: str = "global"
+    session_id: str = ""
+
+
+class ScoreEventOut(BaseModel):
+    id: int
+    total_score: int
+    keyword_density: int
+    formatting: int
+    quantifiable_metrics: int
+    impact_verbs: int
+    structure: int
+    target_country: str
+    template: str
+    word_count: int
+    created_at: Optional[str] = None
+
+
+class ScoreHistoryResponse(BaseModel):
+    enabled: bool = False
+    events: List[ScoreEventOut] = Field(default_factory=list)
 
 
 class ChatResponse(BaseModel):
@@ -125,6 +148,25 @@ class ChatResponse(BaseModel):
     updated_resume_text: str = ""
     did_edit: bool = False
     source: str = "heuristic"  # "llm" | "heuristic"
+
+
+class FormatRule(BaseModel):
+    label: str
+    status: str  # "pass" | "warn" | "fail"
+    detail: str = ""
+
+
+class FormatCheckRequest(BaseModel):
+    resume_text: str
+    target_country: str = "global"
+
+
+class FormatCheckResult(BaseModel):
+    target_country: str
+    compliance_score: int
+    rules: List[FormatRule] = Field(default_factory=list)
+    section_order: List[str] = Field(default_factory=list)
+    note: str = ""
 
 
 class TemplateInfo(BaseModel):

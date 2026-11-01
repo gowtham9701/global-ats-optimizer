@@ -2,17 +2,17 @@
 
 A side-panel assistant that answers questions about the user's resume and can
 apply concrete modifications. It is grounded by the same tools used elsewhere
-(ATS scorer, keyword matcher, RAG knowledge base). When a live LLM is present
-it produces fluent, context-aware replies; otherwise a capable deterministic
-assistant handles the common intents so the copilot always works for free.
+(ATS scorer, keyword matcher, RAG knowledge base). With a live LLM present it
+streams fluent, context-aware replies token-by-token (so the UI genuinely
+"thinks" in real time); otherwise a capable deterministic assistant handles the
+common intents so the copilot always works.
 """
 from __future__ import annotations
 
 import re
-from typing import List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional
 
 from app.agents.tools import (
-    action_verb_enhancer_tool,
     formatter_tool,
     keyword_matcher_tool,
     line_profiler_tool,
@@ -24,14 +24,17 @@ from app.services.parser import parse_resume
 from app.services.rag import get_knowledge_base
 from app.services.resume_improver import improve_resume
 
+# Verbs that imply the user wants the resume itself changed/rewritten.
 EDIT_INTENT = re.compile(
-    r"\b(improve|rewrite|optimi[sz]e|enhance|fix|strengthen|apply|make it better|"
-    r"polish|boost|upgrade|refine|tailor|add keywords?)\b", re.I
+    r"\b(improve|rewrite|re-?write|optimi[sz]e|enhance|strengthen|apply|polish|"
+    r"boost|upgrade|refine|tailor|revis|shorten|condense|expand|quantify|"
+    r"add (missing )?keywords?|make (it|my|the)\b.*\b(better|stronger|concise|"
+    r"shorter|impactful|punchier|crisp))\b", re.I
 )
 # Advice/question phrasing should be answered, not trigger a silent rewrite.
 ADVICE_INTENT = re.compile(
     r"\b(tips?|advice|suggest|recommend|how (do|should|can|would) i|what should|"
-    r"give me|show me|explain|should i)\b|\?\s*$", re.I
+    r"why|explain|should i|what is|what are|which|give me (a |some |one )?(tip|advice|idea))\b", re.I
 )
 SCORE_INTENT = re.compile(r"\b(score|ats|rating|how good|evaluate|assess|grade)\b", re.I)
 KEYWORD_INTENT = re.compile(r"\b(keyword|missing|match|job description|jd)\b", re.I)
@@ -41,6 +44,19 @@ SUGGEST_CHIPS = [
     "Make my summary more impactful",
     "What is my ATS score and why?",
 ]
+EDIT_CHIPS = ["Apply to editor", "Make the summary more concise", "What else can I improve?"]
+
+
+def _is_edit(user_msg: str) -> bool:
+    if not EDIT_INTENT.search(user_msg):
+        return False
+    # Questions ("...?") and advice phrasing ("tip", "how do I", "what should")
+    # are answered rather than triggering a silent rewrite.
+    if re.search(r"\?\s*$", user_msg):
+        return False
+    if ADVICE_INTENT.search(user_msg):
+        return False
+    return True
 
 
 def _ensure_parsed(req_parsed: Optional[ParsedResume], resume_text: str) -> Optional[ParsedResume]:
@@ -68,25 +84,32 @@ def _grounding(resume_text: str, job_description: str, country: str) -> dict:
     return {"score": score, "km": km, "prof": prof, "fmt": fmt, "rag": rag}
 
 
-def _llm_reply(user_msg: str, messages: List[ChatMessage], resume_text: str,
-               job_description: str, country: str, g: dict) -> Optional[str]:
-    llm = get_llm()
-    if not llm.is_live:
-        return None
-    history = "\n".join(f"{m.role.upper()}: {m.content}" for m in messages[-6:])
+def _build_messages(user_msg: str, messages: List[ChatMessage], resume_text: str,
+                    job_description: str, country: str, g: dict) -> list:
     rag_block = "\n".join(f"- {c}" for c in g["rag"])
     missing = ", ".join(g["km"]["missing_keywords"][:8]) or "none"
-    prompt = (
-        "You are an expert, friendly resume copilot. Use the context to give a concise, "
-        "actionable answer (max 160 words). Refer to specifics from the resume.\n\n"
-        f"ATS score: {g['score']['total_score']}/100. Keyword match: {g['km']['match_percent']}%. "
-        f"Missing keywords: {missing}. "
-        f"Lines: {g['prof']['good']} strong / {g['prof']['warn']} weak-ish / {g['prof']['bad']} weak.\n"
-        f"Knowledge:\n{rag_block}\n\n"
-        f"Resume:\n{resume_text[:2500]}\n\n"
-        f"Conversation so far:\n{history}\n\nUSER: {user_msg}\nASSISTANT:"
+    system = (
+        "You are an expert, friendly resume copilot for a global ATS optimizer. "
+        "Give concise, specific, actionable answers (max ~160 words). Refer to "
+        "concrete details from the user's resume. Use short paragraphs or bullet "
+        "points. Never invent experience the user doesn't have."
     )
-    return llm.generate(prompt, system="You are a helpful resume optimization copilot.", temperature=0.4)
+    context = (
+        f"Live analysis of the user's resume:\n"
+        f"- ATS score: {g['score']['total_score']}/100\n"
+        f"- Keyword match: {g['km']['match_percent']}%; missing keywords: {missing}\n"
+        f"- Lines: {g['prof']['good']} strong / {g['prof']['warn']} to improve / {g['prof']['bad']} weak\n"
+        f"- Target country: {country}\n"
+        f"Country ATS guidance:\n{rag_block}\n\n"
+        f"Resume content:\n{resume_text[:3000]}"
+    )
+    out = [{"role": "system", "content": system + "\n\n" + context}]
+    for m in messages[-6:]:
+        if m.role in ("user", "assistant"):
+            out.append({"role": m.role, "content": m.content})
+    if not out or out[-1]["role"] != "user":
+        out.append({"role": "user", "content": user_msg})
+    return out
 
 
 def _heuristic_reply(user_msg: str, g: dict, country: str) -> str:
@@ -114,11 +137,32 @@ def _heuristic_reply(user_msg: str, g: dict, country: str) -> str:
 
     parts.append(
         f"I found {prof['bad']} weak and {prof['warn']} improvable lines. "
-        "Say ‘improve my resume’ and I’ll rewrite them and update the editor for you."
+        "Say 'improve my resume' and I'll rewrite them and update the editor for you."
     )
     if g["rag"]:
         parts.append("Tip: " + g["rag"][0])
     return " ".join(parts)
+
+
+def _do_edit(current_parsed: ParsedResume, job_description: str, country: str,
+             user_msg: str, prev_score: int) -> ChatResponse:
+    improved, changes, source = improve_resume(
+        current_parsed, job_description, country, instruction=user_msg
+    )
+    new_score = score_resume(improved.raw_text, job_description)["total_score"]
+    reply = (
+        "Done — I rewrote your resume. " + " ".join(changes) +
+        f" Projected ATS score: **{new_score}/100** (was {prev_score}). "
+        "Click 'Apply to editor' to load these changes."
+    )
+    return ChatResponse(
+        reply=reply,
+        suggestions=EDIT_CHIPS,
+        updated_parsed=improved,
+        updated_resume_text=improved.raw_text,
+        did_edit=True,
+        source=source,
+    )
 
 
 def chat(messages: List[ChatMessage], resume_text: str, parsed: Optional[ParsedResume],
@@ -137,31 +181,89 @@ def chat(messages: List[ChatMessage], resume_text: str, parsed: Optional[ParsedR
     effective_text = resume_text.strip() or current_parsed.raw_text
     g = _grounding(effective_text, job_description, country)
 
-    # Edit intent → apply modifications and return the updated resume.
-    # Advice/question phrasing (e.g. "give me tips to improve") is answered instead.
-    if EDIT_INTENT.search(user_msg) and not ADVICE_INTENT.search(user_msg):
-        improved, changes, source = improve_resume(
-            current_parsed, job_description, country, instruction=user_msg
-        )
-        new_score = score_resume(improved.raw_text, job_description)["total_score"]
-        reply = (
-            "Done — I rewrote your resume. " + " ".join(changes) +
-            f" Projected ATS score: **{new_score}/100** (was {g['score']['total_score']}). "
-            "Click ‘Apply to editor’ to load these changes."
-        )
-        return ChatResponse(
-            reply=reply,
-            suggestions=["Apply to editor", "Make the summary more concise", "What else can I improve?"],
-            updated_parsed=improved,
-            updated_resume_text=improved.raw_text,
-            did_edit=True,
-            source=source,
-        )
+    if _is_edit(user_msg):
+        return _do_edit(current_parsed, job_description, country, user_msg, g["score"]["total_score"])
 
-    # Otherwise answer (LLM if available, else deterministic).
-    reply = _llm_reply(user_msg, messages, effective_text, job_description, country, g)
-    source = "llm"
+    llm = get_llm()
+    reply = ""
+    source = "heuristic"
+    if llm.is_live:
+        msgs = _build_messages(user_msg, messages, effective_text, job_description, country, g)
+        if llm.provider == "openrouter":
+            reply = llm.chat_openrouter(msgs, temperature=0.4)
+        else:
+            reply = llm.generate(user_msg, system=msgs[0]["content"], temperature=0.4)
+        if reply:
+            source = "llm"
     if not reply:
         reply = _heuristic_reply(user_msg, g, country)
         source = "heuristic"
     return ChatResponse(reply=reply, suggestions=SUGGEST_CHIPS, source=source)
+
+
+def stream_chat(messages: List[ChatMessage], resume_text: str, parsed: Optional[ParsedResume],
+                job_description: str, country: str) -> Iterator[Dict]:
+    """Yield SSE events: status / token / final.
+
+    * ``status`` - a short "thinking" indicator the UI can display.
+    * ``token``  - an incremental chunk of the streamed answer.
+    * ``final``  - the completed reply plus suggestions and any resume edit.
+    """
+    country = (country or "global").lower()
+    user_msg = _last_user_message(messages)
+    current_parsed = _ensure_parsed(parsed, resume_text)
+
+    if current_parsed is None:
+        yield {
+            "type": "final",
+            "reply": "Upload or create a resume first, then I can analyze it, answer questions, "
+                     "and rewrite it for a higher ATS score.",
+            "suggestions": ["Create a resume from a description", "Upload an existing resume"],
+            "did_edit": False,
+            "source": "heuristic",
+        }
+        return
+
+    effective_text = resume_text.strip() or current_parsed.raw_text
+
+    # Edit intent: show progress, perform the rewrite, return updated resume.
+    if _is_edit(user_msg):
+        yield {"type": "status", "text": "Analyzing your resume and rewriting for impact…"}
+        g = _grounding(effective_text, job_description, country)
+        resp = _do_edit(current_parsed, job_description, country, user_msg, g["score"]["total_score"])
+        yield {
+            "type": "final",
+            "reply": resp.reply,
+            "suggestions": resp.suggestions,
+            "updated_parsed": resp.updated_parsed.model_dump() if resp.updated_parsed else None,
+            "updated_resume_text": resp.updated_resume_text,
+            "did_edit": True,
+            "source": resp.source,
+        }
+        return
+
+    yield {"type": "status", "text": "Thinking…"}
+    g = _grounding(effective_text, job_description, country)
+    llm = get_llm()
+
+    streamed = ""
+    if llm.is_live and llm.provider == "openrouter":
+        msgs = _build_messages(user_msg, messages, effective_text, job_description, country, g)
+        for chunk in llm.stream_openrouter(msgs, temperature=0.4):
+            streamed += chunk
+            yield {"type": "token", "text": chunk}
+
+    if streamed.strip():
+        yield {
+            "type": "final",
+            "reply": streamed.strip(),
+            "suggestions": SUGGEST_CHIPS,
+            "did_edit": False,
+            "source": "llm",
+        }
+        return
+
+    # Fallback (no live LLM or empty stream): non-streamed heuristic answer.
+    reply = _heuristic_reply(user_msg, g, country)
+    yield {"type": "final", "reply": reply, "suggestions": SUGGEST_CHIPS,
+           "did_edit": False, "source": "heuristic"}

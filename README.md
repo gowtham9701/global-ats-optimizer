@@ -35,8 +35,11 @@ Built to run **100% free**: it works out-of-the-box with a deterministic heurist
 | **Resume Creator** | Build a resume three ways — **generate from a plain-text prompt/description**, **import a PDF/DOCX**, or **start blank** — then edit everything live in the UI. |
 | **Live In-UI Editor** | Edit contact fields and every section/bullet directly; edits instantly become the "latest result" re-fed into the scoring model. Live preview + **Download PDF pinned to the top toolbar**. |
 | **ATS Verification Everywhere** | A reusable **Verify ATS Score** control appears throughout the flow (Home, Builder toolbar, Dashboard) so compatibility is checked at every step. |
-| **Conversational AI Copilot** | A global side-panel chat that answers questions, checks your ATS score, finds missing keywords, and **rewrites your resume on request** — one click applies the changes straight into the editor. Uses the LLM when configured, with a capable deterministic fallback. |
-| **ATS Scoring & Deep Diagnostics** | A benchmark score **/100** from 5 weighted components: keyword density, formatting, quantifiable metrics, impact verbs, structure. |
+| **Conversational AI Copilot** | A global side-panel chat with a modern generative-AI interface that **streams its answer token-by-token in real time**. It answers questions, explains your ATS score, finds missing keywords, and **rewrites your resume on request** — one click applies the changes into the editor. Uses OpenRouter/Gemini/Ollama when configured, with a capable deterministic fallback. |
+| **ATS Scoring & Deep Diagnostics** | A realistic benchmark score **/100** from 5 weighted components (keyword density, formatting, quantifiable metrics, impact verbs, structure) — ratio-based so scores genuinely differentiate strong vs weak resumes. |
+| **Country Format Verifier** | A reusable **Verify format for <country>** control (Home, Builder, Dashboard) that checks any resume — **including uploaded ones** — against the selected country's section order, privacy/anti-discrimination rules, date format and ATS-safe layout, with a compliance score. |
+| **Score History & Trends** | When a Neon Postgres `DATABASE_URL` is set, every verification is persisted and the dashboard shows a **progress trend** over time. No resume content is stored. |
+| **6 Resume Templates + WYSIWYG Preview** | Tech Minimalist, Modern Accent, Executive, Elegant Serif, Compact Pro, Academic CV — switch template & accent colour and **see the exact PDF rendered live** before downloading. |
 | **Key Line Highlighter** | Color-codes every line 🟢 high-impact / 🟡 needs-metrics / 🔴 weak-phrasing, with inline replacement suggestions. |
 | **Agentic AI Tools** | An agent orchestrates custom tools: **Keyword Matcher**, **Action-Verb Enhancer**, **Formatter**, **Line Profiler**, **Structural Localizer**. |
 | **RAG Knowledge Base** | Country-specific ATS best-practices retrieved (TF-IDF or sentence-transformers) and injected into the agent prompts. |
@@ -112,31 +115,36 @@ App at **http://localhost:5173**
 
 ## 🤖 Enabling Real AI (optional, still free)
 
-The app runs fully without any model. To enable richer AI narratives/rewrites:
+The app runs fully without any model. To enable **real-time, streaming** AI
+narratives, Q&A and resume rewrites:
 
-### Option A — Google Gemini (free tier)
-1. Get a free key: https://aistudio.google.com/app/apikey
+### Option A — OpenRouter (recommended, many free models)
+1. Get a free key: https://openrouter.ai/keys
 2. Set env vars (locally in `backend/.env`, or in the Render dashboard):
+   ```
+   LLM_PROVIDER=openrouter
+   OPENROUTER_API_KEY=sk-or-v1-...
+   OPENROUTER_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
+   OPENROUTER_FALLBACK_MODELS=nvidia/nemotron-3.5-lightning:free
+   ```
+3. No extra install needed (it uses `httpx`). Browse free models at
+   https://openrouter.ai/models?max_price=0
+
+The copilot **streams tokens as it thinks** (SSE via `/api/chat/stream`), and
+on any error or rate-limit it **automatically falls back across the configured
+models and finally to the built-in heuristic engine**, so it never breaks.
+
+### Option B — Google Gemini (free tier)
+1. Get a free key: https://aistudio.google.com/app/apikey
+2. Set env vars:
    ```
    LLM_PROVIDER=gemini
    GEMINI_API_KEY=your_key_here
    ```
-3. `google-generativeai` is already in `requirements.txt`, so no extra install is needed.
+3. `google-generativeai` is already in `requirements.txt`. The app
+   **auto-selects the newest usable Gemini flash model** for your key.
 
-The app **auto-selects the newest usable Gemini flash model** for your key
-(e.g. `gemini-3.8-flash`) — no model name to configure. You can still pin one
-with `GEMINI_MODEL=...` if you want. Verify at `GET /api/llm-diagnostics`
-(it lists the available models without consuming quota).
-
-> **Free-tier limits:** a new Gemini free key allows only the latest model, which
-> currently permits **~20 generate requests/day**. Within that budget you get
-> real AI-written narratives, rewrites and resume generation. **Beyond the daily
-> cap, the app automatically falls back to the built-in heuristic engine** (a
-> `429` is handled gracefully), so it keeps working — just without the LLM flourish.
-> For higher limits, enable billing on your Google Cloud project, or use **Ollama**
-> locally (Option B) for unlimited, fully free generation.
-
-### Option B — Ollama (local open-source models)
+### Option C — Ollama (local open-source models)
 1. Install Ollama: https://ollama.com
 2. `ollama pull llama3`
 3. In `backend/.env`:
@@ -144,6 +152,16 @@ with `GEMINI_MODEL=...` if you want. Verify at `GET /api/llm-diagnostics`
    LLM_PROVIDER=ollama
    OLLAMA_MODEL=llama3
    ```
+
+### Persistence with Neon Postgres (optional)
+Set a Neon connection string to durably store **ATS score history** (powering
+the dashboard trend chart) and **copilot chat turns**. Resume/PDF content is
+**never** stored — only lightweight analytics.
+```
+DATABASE_URL=postgresql://user:pass@ep-xxxx-pooler.region.aws.neon.tech/neondb?sslmode=require
+```
+Get one free at https://neon.tech. Without it, the app runs normally with
+persistence disabled.
 
 ### Higher-quality RAG (optional)
 ```

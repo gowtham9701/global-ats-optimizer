@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Gauge, Bot, KeyRound, BookOpen, ListChecks, Globe2, FileDown,
-  Loader2, RefreshCw, Highlighter, Wrench,
+  Loader2, RefreshCw, Highlighter, Wrench, TrendingUp, PenLine, Eye,
 } from 'lucide-react'
 import ScoreDial from '../components/ScoreDial.jsx'
 import ScoreBars from '../components/ScoreBars.jsx'
@@ -11,13 +11,19 @@ import LineHighlighter from '../components/LineHighlighter.jsx'
 import SplitScreen from '../components/SplitScreen.jsx'
 import Chips from '../components/Chips.jsx'
 import Card from '../components/Card.jsx'
+import ScoreHistory from '../components/ScoreHistory.jsx'
+import FormatCheck from '../components/FormatCheck.jsx'
+import TemplatePreview from '../components/TemplatePreview.jsx'
 import { useResume } from '../store/ResumeContext.jsx'
 import { analyzeResume, localizeResume, generatePdf } from '../api/client.js'
+
+const COUNTRIES = ['germany', 'usa', 'uk', 'canada', 'india', 'global']
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const {
-    parsed, resumeText, jobDescription, targetCountry, template, accentColor,
+    parsed, resumeText, jobDescription, targetCountry, setTargetCountry,
+    template, setTemplate, accentColor,
     analysis, setAnalysis, localized, setLocalized,
   } = useResume()
 
@@ -25,6 +31,7 @@ export default function Dashboard() {
   const [localizing, setLocalizing] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState('')
+  const [historyKey, setHistoryKey] = useState(0)
 
   useEffect(() => {
     if (!parsed?.raw_text) {
@@ -39,8 +46,10 @@ export default function Dashboard() {
     setError('')
     setLoading(true)
     try {
-      const data = await analyzeResume({ resumeText, jobDescription, targetCountry })
+      const wordCount = (resumeText || '').split(/\s+/).filter(Boolean).length
+      const data = await analyzeResume({ resumeText, jobDescription, targetCountry, template, wordCount })
       setAnalysis(data)
+      setHistoryKey((k) => k + 1)
     } catch (e) {
       setError(e?.response?.data?.detail || 'Analysis failed. Is the backend running?')
     } finally {
@@ -91,7 +100,20 @@ export default function Dashboard() {
             Template: <span className="font-semibold capitalize">{template.replace('_', ' ')}</span>
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <select
+            value={targetCountry}
+            onChange={(e) => { setTargetCountry(e.target.value); setLocalized(null) }}
+            className="rounded-full border border-slate-200 px-3 py-2 text-sm capitalize focus:outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            {COUNTRIES.map((c) => <option key={c} value={c} className="capitalize">{c}</option>)}
+          </select>
+          <button
+            onClick={() => navigate('/builder')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:border-brand-400"
+          >
+            <PenLine size={16} /> Open in editor
+          </button>
           <button
             onClick={runAnalysis}
             disabled={loading}
@@ -130,6 +152,24 @@ export default function Dashboard() {
               <p className="text-sm text-slate-600 leading-relaxed">{analysis.agent_narrative}</p>
             </Card>
           </div>
+
+          {/* History trend + country format compliance */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card title="Score History & Trend" icon={TrendingUp}>
+              <ScoreHistory refreshKey={historyKey} />
+            </Card>
+            <Card title={`Country Format Check · ${targetCountry}`} icon={Globe2}>
+              <p className="text-sm text-slate-500 mb-3">
+                Verify this resume against {targetCountry} ATS/format conventions — works for uploaded resumes too.
+              </p>
+              <FormatCheck getText={() => resumeText} targetCountry={targetCountry} />
+            </Card>
+          </div>
+
+          {/* WYSIWYG template preview */}
+          <Card title="Live Resume Preview" icon={Eye}>
+            <TemplatePreview parsed={parsed} template={template} accentColor={accentColor} />
+          </Card>
 
           {/* Keywords */}
           <div className="grid md:grid-cols-2 gap-6">

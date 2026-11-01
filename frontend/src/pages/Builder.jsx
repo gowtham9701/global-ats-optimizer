@@ -8,9 +8,11 @@ import {
 import FileDropzone from '../components/FileDropzone.jsx'
 import ResumeEditor from '../components/ResumeEditor.jsx'
 import AtsScore from '../components/AtsScore.jsx'
+import FormatCheck from '../components/FormatCheck.jsx'
+import TemplatePreview from '../components/TemplatePreview.jsx'
 import { useResume } from '../store/ResumeContext.jsx'
 import { parsedToText, emptyResume } from '../store/resumeUtils.js'
-import { uploadResume, generateResume, generatePdf } from '../api/client.js'
+import { uploadResume, generateResume, generatePdf, fetchTemplates } from '../api/client.js'
 
 const COUNTRIES = [
   { id: 'germany', label: '🇩🇪 Germany' },
@@ -21,18 +23,23 @@ const COUNTRIES = [
   { id: 'global', label: '🌍 Global' },
 ]
 
-const TEMPLATES = [
+const FALLBACK_TEMPLATES = [
   { id: 'tech_minimalist', name: 'Tech Minimalist' },
-  { id: 'executive', name: 'Executive' },
+  { id: 'modern', name: 'Modern Accent' },
+  { id: 'executive', name: 'Executive Professional' },
+  { id: 'elegant', name: 'Elegant Serif' },
+  { id: 'compact', name: 'Compact Pro' },
   { id: 'academic', name: 'Academic CV' },
 ]
+
+const ACCENTS = ['#2563eb', '#0f766e', '#7c3aed', '#be123c', '#b45309', '#0369a1', '#111827']
 
 export default function Builder() {
   const navigate = useNavigate()
   const {
     parsed, setParsed, setResumeText, fileName, setFileName,
     jobDescription, targetCountry, setTargetCountry,
-    template, setTemplate, accentColor, setAnalysis,
+    template, setTemplate, accentColor, setAccentColor, setAnalysis,
   } = useResume()
 
   const [mode, setMode] = useState(parsed?.raw_text ? 'edit' : 'choose')
@@ -45,9 +52,15 @@ export default function Builder() {
   const [error, setError] = useState('')
   const [source, setSource] = useState('')
   const [view, setView] = useState('edit') // edit | preview
+  const [templates, setTemplates] = useState(FALLBACK_TEMPLATES)
+
+  useEffect(() => {
+    fetchTemplates().then((t) => t?.length && setTemplates(t)).catch(() => {})
+  }, [])
 
   // Keep resumeText in context in sync with edits so analysis/PDF use latest.
   const liveText = useMemo(() => parsedToText(parsed), [parsed])
+  const wordCount = useMemo(() => (liveText ? liveText.split(/\s+/).filter(Boolean).length : 0), [liveText])
   useEffect(() => {
     if (parsed) setResumeText(liveText)
   }, [liveText]) // eslint-disable-line
@@ -185,24 +198,22 @@ export default function Builder() {
   }
 
   // ----- Edit mode (result displayed + editable) -----
+  const activeTemplateName = (templates.find((t) => t.id === template) || {}).name || template
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-6">
-      {/* Sticky top toolbar: download + ATS verification always visible */}
+      {/* Sticky top toolbar */}
       <div className="sticky top-16 z-30 -mx-6 px-6 py-3 glass border-b mb-6 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <div className="inline-flex rounded-full bg-slate-100 p-1">
-            <button onClick={() => setView('edit')} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition ${view === 'edit' ? 'bg-white shadow text-brand-700' : 'text-slate-500'}`}><Pencil size={14} /> Edit</button>
-            <button onClick={() => setView('preview')} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition ${view === 'preview' ? 'bg-white shadow text-brand-700' : 'text-slate-500'}`}><Eye size={14} /> Preview</button>
+            <button onClick={() => setView('edit')} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition ${view === 'edit' ? 'bg-white shadow text-brand-700' : 'text-slate-500 hover:text-slate-700'}`}><Pencil size={14} /> Edit</button>
+            <button onClick={() => setView('preview')} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition ${view === 'preview' ? 'bg-white shadow text-brand-700' : 'text-slate-500 hover:text-slate-700'}`}><Eye size={14} /> Preview</button>
           </div>
-          {source && <span className="text-xs text-slate-400">Drafted by: <b className="capitalize">{source === 'llm' ? 'AI model' : 'Smart builder'}</b></span>}
+          {source && <span className="text-xs text-slate-400 hidden sm:inline">Drafted by: <b className="capitalize">{source === 'llm' ? 'AI model' : 'Smart builder'}</b></span>}
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <AtsScore getText={() => liveText} jobDescription={jobDescription} targetCountry={targetCountry} />
-          <select value={template} onChange={(e) => setTemplate(e.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-            {TEMPLATES.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
+          <AtsScore getText={() => liveText} jobDescription={jobDescription} targetCountry={targetCountry} template={template} wordCount={wordCount} />
           <button onClick={downloadPdf} disabled={downloading}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 shadow-lg shadow-brand-600/30">
             {downloading ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Download PDF
@@ -216,53 +227,60 @@ export default function Builder() {
 
       {error && <div className="mb-4 rounded-lg bg-rose-50 text-rose-700 px-3 py-2 text-sm">{error}</div>}
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Editor */}
-        <div className={view === 'preview' ? 'hidden lg:block' : ''}>
-          <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold">
-            <PenLine size={16} className="text-brand-600" /> Edit your resume
+      {/* Template + style controls (always visible) */}
+      <div className="mb-5 rounded-2xl bg-white shadow-sm border border-slate-100 p-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+            <Sparkles size={15} className="text-brand-600" /> Template & style
           </div>
-          <ResumeEditor parsed={parsed} onChange={applyParsed} />
+          <div className="flex items-center gap-2">
+            {ACCENTS.map((c) => (
+              <button key={c} onClick={() => setAccentColor(c)} title={c}
+                className={`w-6 h-6 rounded-full border-2 transition ${accentColor === c ? 'border-slate-800 scale-110' : 'border-white shadow'}`}
+                style={{ backgroundColor: c }} />
+            ))}
+          </div>
         </div>
-
-        {/* Live preview */}
-        <div className={view === 'edit' ? 'hidden lg:block' : ''}>
-          <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold">
-            <Eye size={16} className="text-brand-600" /> Live preview
-          </div>
-          <div className="rounded-2xl bg-white shadow-md p-6 min-h-[400px]">
-            <PreviewDoc parsed={parsed} />
-          </div>
+        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {templates.map((t) => (
+            <button key={t.id} onClick={() => setTemplate(t.id)}
+              className={`text-left px-3 py-2 rounded-xl border text-sm transition ${template === t.id ? 'border-brand-500 bg-brand-50 text-brand-700 font-semibold' : 'border-slate-200 text-slate-600 hover:border-brand-300'}`}>
+              {t.name}
+            </button>
+          ))}
         </div>
       </div>
-    </div>
-  )
-}
 
-function PreviewDoc({ parsed }) {
-  const c = parsed?.contact || {}
-  const sections = (parsed?.sections || []).filter((s) => (s.title || '').toLowerCase() !== 'header')
-  return (
-    <AnimatePresence mode="popLayout">
-      <motion.div key={JSON.stringify(c)} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2 className="text-2xl font-extrabold text-slate-900">{c.name || 'Your Name'}</h2>
-        <p className="text-sm text-slate-500 mt-1">
-          {[c.email, c.phone, c.location, ...(c.links || [])].filter(Boolean).join('  ·  ')}
-        </p>
-        <div className="h-0.5 bg-brand-600 rounded my-4" />
-        {sections.map((s, i) => (
-          <div key={i} className="mb-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-brand-700 mb-1.5">{s.title}</h3>
-            <ul className="space-y-1">
-              {s.lines.filter(Boolean).map((l, j) => (
-                <li key={j} className="text-sm text-slate-700 flex gap-2">
-                  <span className="text-brand-400">▹</span>{l}
-                </li>
-              ))}
-            </ul>
+      {view === 'edit' ? (
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold">
+              <PenLine size={16} className="text-brand-600" /> Edit your resume
+            </div>
+            <ResumeEditor parsed={parsed} onChange={applyParsed} />
           </div>
-        ))}
-      </motion.div>
-    </AnimatePresence>
+          <div className="hidden lg:block">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-slate-700 font-bold">
+                <Eye size={16} className="text-brand-600" /> Live preview · {activeTemplateName}
+              </div>
+            </div>
+            <TemplatePreview parsed={parsed} template={template} accentColor={accentColor} />
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-slate-700 font-bold">
+            <Eye size={16} className="text-brand-600" /> Live preview · {activeTemplateName}
+          </div>
+          <div className="max-w-3xl mx-auto w-full">
+            <TemplatePreview parsed={parsed} template={template} accentColor={accentColor} />
+          </div>
+          <div className="max-w-3xl mx-auto w-full rounded-2xl bg-white shadow-sm border border-slate-100 p-4">
+            <FormatCheck getText={() => liveText} targetCountry={targetCountry} />
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

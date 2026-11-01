@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 0; }
+  body { font-family: Helvetica, Arial, sans-serif; color: #1f2937; font-size: 10.5pt; line-height: 1.45; margin: 0; }
+  .band { background-color: {{ accent_color }}; color: #ffffff; padding: 22px 34px 18px; }
+  .name { font-size: 24pt; font-weight: bold; margin: 0; color: #ffffff; letter-spacing: 0.5px; }
+  .contact { font-size: 9pt; color: #eef2ff; margin-top: 6px; }
+  .contact span { margin-right: 12px; }
+  .content { padding: 18px 34px; }
+  .section-title { font-size: 11pt; font-weight: bold; text-transform: uppercase;
+    letter-spacing: 1.5px; color: {{ accent_color }}; margin: 16px 0 6px;
+    border-bottom: 2px solid {{ accent_color }}; padding-bottom: 3px; }
+  ul { margin: 4px 0 8px 0; padding-left: 16px; }
+  li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="band">
+    <p class="name">{{ contact.name or "Your Name" }}</p>
+    <div class="contact">
+      {% if contact.email %}<span>{{ contact.email }}</span>{% endif %}
+      {% if contact.phone %}<span>{{ contact.phone }}</span>{% endif %}
+      {% if contact.location %}<span>{{ contact.location }}</span>{% endif %}
+      {% for link in contact.links %}<span>{{ link }}</span>{% endfor %}
+    </div>
+  </div>
+  <div class="content">
+    {% for section in sections %}
+      <div class="section-title">{{ section.title }}</div>
+      <ul>
+        {% for line in section.lines %}
+          <li>{{ line }}</li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </div>
+</body>
+</html>

@@ -39,6 +39,21 @@ STOPWORDS: Set[str] = {
     "will", "can", "all", "any", "but", "not", "who", "what", "when", "which",
 }
 
+# A compact set of in-demand, specific skill/technology keywords. Presence of
+# these signals a keyword-rich resume when no job description is available.
+SKILL_KEYWORDS: Set[str] = {
+    "python", "java", "javascript", "typescript", "react", "angular", "vue",
+    "node", "django", "flask", "fastapi", "spring", "kubernetes", "docker",
+    "aws", "azure", "gcp", "terraform", "ansible", "jenkins", "git", "ci/cd",
+    "sql", "postgresql", "mysql", "mongodb", "redis", "kafka", "graphql",
+    "rest", "microservices", "api", "ml", "ai", "tensorflow", "pytorch",
+    "pandas", "numpy", "spark", "hadoop", "tableau", "powerbi", "excel",
+    "agile", "scrum", "devops", "linux", "golang", "rust", "scala", "ruby",
+    "php", "swift", "kotlin", "c++", "html", "css", "sass", "webpack",
+    "selenium", "junit", "pytest", "cypress", "jira", "figma", "salesforce",
+    "snowflake", "databricks", "airflow", "elasticsearch", "nginx", "grpc",
+}
+
 METRIC_RE = re.compile(r"(\$?\d[\d,.]*\s?(?:%|percent|k|m|bn|billion|million|hours|users|customers|x|\+)?)", re.I)
 BULLET_RE = re.compile(r"^\s*[-•*▪◦‣>]\s*")
 
@@ -62,12 +77,35 @@ def extract_keywords(text: str, top_n: int = 30) -> List[str]:
     return [word for word, _ in counts.most_common(top_n)]
 
 
+def _intrinsic_keyword_density(text: str) -> float:
+    """Estimate keyword richness when no job description is supplied.
+
+    Without a JD we cannot measure a true match, so we approximate how
+    keyword-rich and specific the resume is from its own content. This returns
+    a realistic proxy in roughly [0.3, 0.85] — crucially it is **not** a flat
+    1.0, which previously inflated every resume to a near-perfect score.
+    """
+    tokens = [t for t in _tokenize(text) if t not in STOPWORDS and len(t) > 2]
+    if len(tokens) < 10:
+        return min(len(tokens) / 20.0, 0.4)
+    unique = set(tokens)
+    # Lexical diversity (type-token ratio): varied, specific wording scores higher
+    # than repetitive filler. Typical resumes land around 0.45-0.7.
+    diversity = len(unique) / len(tokens)
+    # Reward recognised, in-demand skill/technology keywords actually present.
+    skill_hits = len(unique & SKILL_KEYWORDS)
+    skill_component = min(skill_hits / 18.0, 1.0)
+    density = 0.30 + 0.35 * diversity + 0.25 * skill_component
+    return round(min(density, 0.85), 3)
+
+
 def keyword_match(resume_text: str, job_description: str) -> Tuple[List[str], List[str], float]:
     """Compare resume against JD keywords. Returns matched, missing, ratio."""
     if not job_description.strip():
-        # No JD supplied: use the resume's own keyword richness as a proxy.
+        # No JD supplied: approximate from the resume's own keyword richness
+        # instead of awarding a perfect (1.0) match.
         kws = extract_keywords(resume_text, 20)
-        return kws[:12], [], 1.0 if kws else 0.0
+        return kws[:12], [], _intrinsic_keyword_density(resume_text)
     jd_keywords = extract_keywords(job_description, 30)
     resume_tokens = set(_tokenize(resume_text))
     matched = [k for k in jd_keywords if k in resume_tokens]
@@ -83,6 +121,33 @@ def _count_metrics(text: str) -> int:
 def _count_impact_verbs(text: str) -> int:
     tokens = set(_tokenize(text))
     return len(tokens & IMPACT_VERBS)
+
+
+def _bullet_stats(text: str) -> Tuple[int, int, int]:
+    """Return (bullet_count, bullets_with_metric, bullets_starting_with_verb).
+
+    Content bullets are the substantive, achievement-style lines. Scoring
+    quantifiable-metrics and impact-verbs as a *ratio* of these lines makes the
+    score reflect real resume quality instead of saturating at 100 the moment a
+    handful of metrics or verbs appear anywhere in the document.
+    """
+    bullet_count = metric_bullets = verb_bullets = 0
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        is_bullet = bool(BULLET_RE.match(raw))
+        toks = _tokenize(line)
+        starts_verb = bool(toks) and toks[0] in IMPACT_VERBS
+        # Treat bullets and verb-led sentences as the "achievement" lines.
+        if not (is_bullet or starts_verb):
+            continue
+        bullet_count += 1
+        if _count_metrics(line) > 0:
+            metric_bullets += 1
+        if starts_verb or (_tokenize(line)[:1] and _tokenize(line)[0] in IMPACT_VERBS):
+            verb_bullets += 1
+    return bullet_count, metric_bullets, verb_bullets
 
 
 def _formatting_score(text: str) -> Tuple[int, List[str]]:
@@ -195,11 +260,23 @@ def score_resume(resume_text: str, job_description: str = "") -> Dict:
     keyword_density = int(round(ratio * 100))
     formatting, fmt_notes = _formatting_score(resume_text)
 
+    bullet_count, metric_bullets, verb_bullets = _bullet_stats(resume_text)
     metric_count = _count_metrics(resume_text)
-    quantifiable = min(metric_count * 12, 100)
-
     verb_count = _count_impact_verbs(resume_text)
-    impact = min(verb_count * 10, 100)
+
+    # Quantifiable metrics: share of achievement lines that carry a measurable
+    # result, so a resume where only a few bullets quantify impact scores lower
+    # than one where most do (instead of both saturating at 100).
+    if bullet_count:
+        quantifiable = int(round(metric_bullets / bullet_count * 100))
+    else:
+        quantifiable = min(metric_count * 12, 100)
+
+    # Impact verbs: share of achievement lines that open with a strong verb.
+    if bullet_count:
+        impact = int(round(verb_bullets / bullet_count * 100))
+    else:
+        impact = min(verb_count * 10, 100)
 
     structure = _structure_score(resume_text)
 

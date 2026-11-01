@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: A4; margin: 1.8cm 2cm; }
+  body { font-family: Georgia, "Times New Roman", serif; color: #1f2937; font-size: 10.8pt; line-height: 1.5; }
+  .header { text-align: center; margin-bottom: 6px; }
+  .name { font-size: 23pt; font-weight: normal; letter-spacing: 6px; text-transform: uppercase; margin: 0; color: #111827; }
+  .contact { font-size: 9pt; color: #4b5563; margin-top: 8px; letter-spacing: 1px; }
+  .contact span { margin: 0 7px; }
+  .divider { border: none; border-top: 1px solid #9ca3af; border-bottom: 1px solid #9ca3af; height: 3px; margin: 12px 0 16px; }
+  .section-title { font-size: 11pt; font-weight: bold; text-transform: uppercase;
+    letter-spacing: 3px; color: {{ accent_color }}; text-align: center; margin: 16px 0 6px; }
+  ul { margin: 4px 0 10px 0; padding-left: 18px; }
+  li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <p class="name">{{ contact.name or "Your Name" }}</p>
+    <div class="contact">
+      {% if contact.email %}<span>{{ contact.email }}</span>{% endif %}
+      {% if contact.phone %}<span>&bull; {{ contact.phone }}</span>{% endif %}
+      {% if contact.location %}<span>&bull; {{ contact.location }}</span>{% endif %}
+      {% for link in contact.links %}<span>&bull; {{ link }}</span>{% endfor %}
+    </div>
+  </div>
+  <hr class="divider" />
+  {% for section in sections %}
+    <div class="section-title">{{ section.title }}</div>
+    <ul>
+      {% for line in section.lines %}
+        <li>{{ line }}</li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+</body>
+</html>

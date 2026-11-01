@@ -5,6 +5,7 @@ import { Sparkles, Globe2, ScanSearch, FileDown, Wand2, Rocket } from 'lucide-re
 import FileDropzone from '../components/FileDropzone.jsx'
 import TemplateGrid from '../components/TemplateGrid.jsx'
 import AtsScore from '../components/AtsScore.jsx'
+import FormatCheck from '../components/FormatCheck.jsx'
 import { useResume } from '../store/ResumeContext.jsx'
 import { uploadResume, fetchTemplates } from '../api/client.js'
 
@@ -102,10 +103,13 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl bg-white shadow-md p-4 flex items-center justify-between gap-3 flex-wrap"
+              className="rounded-2xl bg-white shadow-md p-4 space-y-3"
             >
-              <span className="text-sm text-slate-500">Quick check before you dive in:</span>
-              <AtsScore getText={() => resumeText} jobDescription={jobDescription} targetCountry={targetCountry} />
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <span className="text-sm text-slate-500">Quick check before you dive in:</span>
+                <AtsScore getText={() => resumeText} jobDescription={jobDescription} targetCountry={targetCountry} template={template} wordCount={(resumeText || '').split(/\s+/).filter(Boolean).length} />
+              </div>
+              <FormatCheck getText={() => resumeText} targetCountry={targetCountry} compact />
             </motion.div>
           )}
         </div>

@@ -13,7 +13,13 @@ services:
         value: tfidf
       - key: CORS_ORIGINS
         sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        sync: false
       - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
         sync: false
       - key: PYTHON_VERSION
         value: "3.11.9"

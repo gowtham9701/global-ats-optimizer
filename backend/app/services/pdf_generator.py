@@ -26,10 +26,25 @@ TEMPLATES = {
         "name": "Tech Minimalist",
         "description": "Clean single-column layout optimised for engineering roles and ATS parsing.",
     },
+    "modern": {
+        "file": "modern.html",
+        "name": "Modern Accent",
+        "description": "Bold accent header band with crisp sans-serif body — stands out while staying ATS-safe.",
+    },
     "executive": {
         "file": "executive.html",
         "name": "Executive Professional",
         "description": "Polished, authoritative layout for senior leadership and management roles.",
+    },
+    "elegant": {
+        "file": "elegant.html",
+        "name": "Elegant Serif",
+        "description": "Refined centred serif design with spaced headings for a classic, premium feel.",
+    },
+    "compact": {
+        "file": "compact.html",
+        "name": "Compact Pro",
+        "description": "Space-efficient layout with solid section bars — fits more content on one page.",
     },
     "academic": {
         "file": "academic.html",

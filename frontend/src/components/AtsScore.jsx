@@ -11,7 +11,7 @@ function tone(score) {
 
 // Compact, reusable ATS verification control. Pass a getText() that returns the
 // latest resume text so it always scores the current (possibly edited) content.
-export default function AtsScore({ getText, jobDescription = '', targetCountry = 'global', onResult, compact = false }) {
+export default function AtsScore({ getText, jobDescription = '', targetCountry = 'global', template = '', wordCount = 0, onResult, compact = false }) {
   const [score, setScore] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -25,7 +25,7 @@ export default function AtsScore({ getText, jobDescription = '', targetCountry =
     setError('')
     setLoading(true)
     try {
-      const data = await analyzeResume({ resumeText: text, jobDescription, targetCountry })
+      const data = await analyzeResume({ resumeText: text, jobDescription, targetCountry, template, wordCount: wordCount || text.split(/\s+/).filter(Boolean).length })
       setScore(data.total_score)
       onResult?.(data)
     } catch (e) {
