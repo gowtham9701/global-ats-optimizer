@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, X, Send, Loader2, CheckCircle2, Wand2, Bot, Zap, Trash2,
@@ -6,6 +7,12 @@ import {
 import { useResume } from '../store/ResumeContext.jsx'
 import { parsedToText } from '../store/resumeUtils.js'
 import { streamCopilot, chatCopilot } from '../api/client.js'
+
+// Chips that should route the user into the builder rather than loop as chat.
+const NAV_SUGGESTIONS = {
+  'Create a resume from a description': '/builder?mode=prompt',
+  'Upload an existing resume': '/builder?mode=upload',
+}
 
 const GREETING = {
   role: 'assistant',
@@ -31,6 +38,7 @@ export default function CopilotChat() {
   const [thinking, setThinking] = useState('')
   const [pendingEdit, setPendingEdit] = useState(null)
   const scrollRef = useRef(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -149,6 +157,11 @@ export default function CopilotChat() {
 
   const onSuggestion = (s) => {
     if (s === 'Apply to editor') return applyEdit()
+    if (NAV_SUGGESTIONS[s]) {
+      setOpen(false)
+      navigate(NAV_SUGGESTIONS[s])
+      return
+    }
     send(s)
   }
 

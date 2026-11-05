@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, PenLine, UploadCloud, FilePlus2, FileDown, Loader2,
@@ -36,13 +36,19 @@ const ACCENTS = ['#2563eb', '#0f766e', '#7c3aed', '#be123c', '#b45309', '#0369a1
 
 export default function Builder() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const {
     parsed, setParsed, setResumeText, fileName, setFileName,
     jobDescription, targetCountry, setTargetCountry,
     template, setTemplate, accentColor, setAccentColor, setAnalysis,
   } = useResume()
 
-  const [mode, setMode] = useState(parsed?.raw_text ? 'edit' : 'choose')
+  const initialMode = (() => {
+    const q = searchParams.get('mode')
+    if (q === 'prompt' || q === 'upload' || q === 'blank') return q
+    return parsed?.raw_text ? 'edit' : 'choose'
+  })()
+  const [mode, setMode] = useState(initialMode)
   const [desc, setDesc] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -57,6 +63,21 @@ export default function Builder() {
   useEffect(() => {
     fetchTemplates().then((t) => t?.length && setTemplates(t)).catch(() => {})
   }, [])
+
+  // Honor ?mode=prompt|upload|blank when navigated here (e.g. from the copilot),
+  // then clear the param so it doesn't override later manual mode changes.
+  useEffect(() => {
+    const q = searchParams.get('mode')
+    if (!q) return
+    if (q === 'blank') {
+      startBlank()
+    } else if (q === 'prompt' || q === 'upload') {
+      setMode(q)
+    }
+    searchParams.delete('mode')
+    setSearchParams(searchParams, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   // Keep resumeText in context in sync with edits so analysis/PDF use latest.
   const liveText = useMemo(() => parsedToText(parsed), [parsed])
