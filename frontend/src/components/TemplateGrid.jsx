@@ -27,7 +27,7 @@ export default function TemplateGrid({ templates, selected, onSelect }) {
             transition={{ delay: i * 0.1 }}
             whileHover={{ y: -6 }}
             onClick={() => onSelect(t.id)}
-            className={`relative text-left rounded-2xl p-5 border-2 transition bg-white
+            className={`relative text-left rounded-card p-5 border-2 transition bg-card
               ${active ? 'border-brand-600 shadow-xl shadow-brand-600/20' : 'border-transparent shadow-md hover:shadow-lg'}`}
           >
             {active && (
@@ -42,8 +42,8 @@ export default function TemplateGrid({ templates, selected, onSelect }) {
             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${GRADIENTS[t.id] || GRADIENTS.tech_minimalist} grid place-items-center text-white mb-4`}>
               <Icon size={22} />
             </div>
-            <h3 className="font-bold text-slate-800">{t.name}</h3>
-            <p className="text-sm text-slate-500 mt-1">{t.description}</p>
+            <h3 className="font-bold text-ink">{t.name}</h3>
+            <p className="text-sm text-muted mt-1">{t.description}</p>
           </motion.button>
         )
       })}

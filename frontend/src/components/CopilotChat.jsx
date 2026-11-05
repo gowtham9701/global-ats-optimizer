@@ -8,10 +8,10 @@ import { useResume } from '../store/ResumeContext.jsx'
 import { parsedToText } from '../store/resumeUtils.js'
 import { streamCopilot, chatCopilot } from '../api/client.js'
 
-// Chips that should route the user into the builder rather than loop as chat.
+// Chips that should route the user into the resume studio rather than loop as chat.
 const NAV_SUGGESTIONS = {
-  'Create a resume from a description': '/builder?mode=prompt',
-  'Upload an existing resume': '/builder?mode=upload',
+  'Create a resume from a description': '/resume?mode=prompt',
+  'Upload an existing resume': '/resume?mode=upload',
 }
 
 const GREETING = {
@@ -174,7 +174,7 @@ export default function CopilotChat() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.92 }}
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-50 h-14 pl-4 pr-5 rounded-full bg-gradient-to-br from-brand-500 via-indigo-500 to-brand-700 text-white shadow-xl shadow-brand-600/40 flex items-center gap-2"
+        className="fixed bottom-6 right-6 z-50 h-12 pl-4 pr-5 rounded-control bg-primary text-on-primary shadow-cta flex items-center gap-2"
         title="AI Copilot"
       >
         <AnimatePresence mode="wait">
@@ -199,34 +199,34 @@ export default function CopilotChat() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 440, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-            className="fixed bottom-24 right-6 z-50 w-[min(94vw,420px)] h-[min(78vh,720px)] rounded-3xl bg-white shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+            className="fixed bottom-24 right-6 z-50 w-[min(94vw,420px)] h-[min(78vh,720px)] rounded-dialog bg-surface shadow-panel border border-line flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="px-4 py-3 bg-gradient-to-r from-slate-900 via-brand-900 to-indigo-900 text-white flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-white/15 grid place-items-center">
+            <div className="px-4 py-3 bg-card border-b border-line flex items-center gap-3">
+              <div className="w-9 h-9 rounded-control bg-primary text-on-primary grid place-items-center">
                 <Bot size={18} />
               </div>
               <div className="leading-tight flex-1">
-                <div className="font-bold text-sm">Resume Copilot</div>
-                <div className="text-[10px] opacity-80 flex items-center gap-1">
+                <div className="font-serif text-[17px] text-ink">Copilot</div>
+                <div className="text-[10.5px] text-muted flex items-center gap-1">
                   <Zap size={10} /> Live AI · streams as it thinks
                 </div>
               </div>
-              <button onClick={resetChat} title="New chat" className="w-8 h-8 grid place-items-center rounded-lg hover:bg-white/15 transition">
+              <button onClick={resetChat} title="New chat" className="w-8 h-8 grid place-items-center rounded-control hover:bg-[var(--hover)] text-muted transition">
                 <Trash2 size={15} />
               </button>
             </div>
 
             {/* Messages */}
-            <div ref={scrollRef} className="thin-scroll flex-1 overflow-auto p-3 space-y-3 bg-gradient-to-b from-slate-50 to-white">
+            <div ref={scrollRef} className="thin-scroll flex-1 overflow-auto p-3 space-y-3 bg-surface">
               {messages.map((m, i) => (
                 <Message key={i} m={m} onSuggestion={onSuggestion} />
               ))}
               {thinking && (
                 <div className="flex justify-start">
-                  <div className="bg-white shadow-sm border border-slate-100 rounded-2xl rounded-bl-sm px-3.5 py-2.5 flex items-center gap-2">
+                  <div className="bg-card shadow-raised border border-line rounded-card rounded-bl-sm px-3.5 py-2.5 flex items-center gap-2">
                     <ThinkingDots />
-                    <span className="text-xs text-slate-500">{thinking}</span>
+                    <span className="text-meta text-muted">{thinking}</span>
                   </div>
                 </div>
               )}
@@ -235,19 +235,19 @@ export default function CopilotChat() {
             {/* Pending apply */}
             {pendingEdit && (
               <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-                className="px-3 py-2 bg-emerald-50 border-t border-emerald-200 flex items-center justify-between">
-                <span className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                className="px-3 py-2 bg-success-surface border-t border-line flex items-center justify-between">
+                <span className="text-meta text-success font-medium flex items-center gap-1">
                   <Wand2 size={13} /> Improved resume ready
                 </span>
                 <button onClick={applyEdit}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-600 text-white hover:bg-emerald-700">
+                  className="text-control font-medium px-3 py-1.5 rounded-control bg-primary text-on-primary hover:bg-primary-hover">
                   Apply to editor
                 </button>
               </motion.div>
             )}
 
             {/* Input */}
-            <div className="p-3 border-t border-slate-100 bg-white">
+            <div className="p-3 border-t border-line bg-card">
               <div className="flex items-end gap-2">
                 <textarea
                   value={input}
@@ -255,12 +255,12 @@ export default function CopilotChat() {
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
                   rows={1}
                   placeholder="Ask anything, or say 'improve my resume'…"
-                  className="thin-scroll flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm max-h-28 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="thin-scroll flex-1 resize-none rounded-control bg-input border border-line-input px-3 py-2 text-field max-h-28 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                 />
                 <button
                   onClick={() => send()}
                   disabled={loading || !input.trim()}
-                  className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white grid place-items-center hover:opacity-90 disabled:opacity-40"
+                  className="w-10 h-10 shrink-0 rounded-control bg-primary text-on-primary grid place-items-center hover:bg-primary-hover disabled:opacity-40"
                 >
                   {loading ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />}
                 </button>
@@ -278,15 +278,15 @@ function Message({ m, onSuggestion }) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed
+        className={`max-w-[88%] rounded-card px-3.5 py-2.5 text-field leading-relaxed
           ${isUser
-            ? 'bg-brand-600 text-white rounded-br-sm'
-            : 'bg-white text-slate-700 shadow-sm border border-slate-100 rounded-bl-sm'}`}
+            ? 'bg-primary text-on-primary rounded-br-sm'
+            : 'bg-card text-ink shadow-raised border border-line rounded-bl-sm'}`}
       >
         <FormattedText text={m.content} />
-        {m.streaming && !m.content && <span className="inline-block w-2 h-4 bg-brand-400 animate-pulse align-middle rounded-sm" />}
+        {m.streaming && !m.content && <span className="inline-block w-2 h-4 bg-muted animate-pulse align-middle rounded-sm" />}
         {!isUser && m.source === 'llm' && !m.streaming && (
-          <div className="mt-1.5 text-[9px] uppercase tracking-wide text-slate-300 flex items-center gap-1">
+          <div className="mt-1.5 text-[9px] uppercase tracking-[0.1em] text-faint flex items-center gap-1">
             <Sparkles size={9} /> AI-generated
           </div>
         )}
@@ -296,10 +296,10 @@ function Message({ m, onSuggestion }) {
               <button
                 key={s}
                 onClick={() => onSuggestion(s)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition
+                className={`text-control px-2.5 py-1 rounded-full border transition-colors
                   ${s === 'Apply to editor'
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700 font-semibold hover:bg-emerald-100'
-                    : 'bg-brand-50 border-brand-200 text-brand-700 hover:bg-brand-100'}`}
+                    ? 'bg-success-surface border-line text-success font-medium hover:brightness-95'
+                    : 'bg-surface border-line text-ink hover:bg-[var(--hover)]'}`}
               >
                 {s === 'Apply to editor' && <CheckCircle2 size={11} className="inline mr-1" />}
                 {s}
@@ -318,7 +318,7 @@ function ThinkingDots() {
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="w-1.5 h-1.5 rounded-full bg-brand-500"
+          className="w-1.5 h-1.5 rounded-full bg-muted"
           animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }}
           transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15 }}
         />
@@ -338,7 +338,7 @@ function FormattedText({ text }) {
         const body = isBullet ? trimmed.replace(/^[-*•]\s+/, '') : line
         return (
           <div key={i} className={isBullet ? 'flex gap-1.5' : ''}>
-            {isBullet && <span className="text-brand-400 mt-0.5">▹</span>}
+            {isBullet && <span className="text-faint mt-0.5">—</span>}
             <span>{renderBold(body)}</span>
           </div>
         )

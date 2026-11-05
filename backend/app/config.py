@@ -25,8 +25,8 @@ def _split_csv(value: str) -> List[str]:
 class Settings:
     """Central settings object."""
 
-    APP_NAME: str = "Global ATS Resume Optimizer & Agentic Architect"
-    APP_VERSION: str = "1.0.0"
+    APP_NAME: str = "CareerForge — Career & Application Suite"
+    APP_VERSION: str = "2.0.0"
 
     # LLM provider: "openrouter", "gemini", "ollama", or "heuristic" (no external model).
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "heuristic").lower()

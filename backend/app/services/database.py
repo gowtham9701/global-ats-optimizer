@@ -24,6 +24,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    JSON,
     create_engine,
     func,
 )
@@ -64,6 +65,60 @@ class ChatMessageRow(Base):
     content: Mapped[str] = mapped_column(Text)
     source: Mapped[str] = mapped_column(String(16), default="")
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class Profile(Base):
+    """A single career profile — the source of truth for all tailored docs.
+
+    Structured sections (skills/experience/projects/education/etc.) are stored
+    as JSON so the shape can evolve without migrations. No PDFs are stored.
+    """
+
+    __tablename__ = "profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    full_name: Mapped[str] = mapped_column(String(160), default="")
+    headline: Mapped[str] = mapped_column(String(200), default="")
+    email: Mapped[str] = mapped_column(String(160), default="")
+    phone: Mapped[str] = mapped_column(String(64), default="")
+    location: Mapped[str] = mapped_column(String(160), default="")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    links: Mapped[list] = mapped_column(JSON, default=list)
+    skills: Mapped[list] = mapped_column(JSON, default=list)
+    experience: Mapped[list] = mapped_column(JSON, default=list)
+    projects: Mapped[list] = mapped_column(JSON, default=list)
+    education: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+
+
+class Application(Base):
+    """One job application tracked from draft to offer (kanban + table)."""
+
+    __tablename__ = "applications"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[str] = mapped_column(String(64), index=True)
+    company: Mapped[str] = mapped_column(String(200), default="")
+    role: Mapped[str] = mapped_column(String(200), default="")
+    location: Mapped[str] = mapped_column(String(160), default="")
+    posting_url: Mapped[str] = mapped_column(String(600), default="")
+    posting_text: Mapped[str] = mapped_column(Text, default="")
+    stage: Mapped[str] = mapped_column(String(32), default="saved", index=True)
+    match_score: Mapped[int] = mapped_column(Integer, default=0)
+    requirements: Mapped[list] = mapped_column(JSON, default=list)
+    gaps: Mapped[list] = mapped_column(JSON, default=list)
+    tailored_resume: Mapped[dict] = mapped_column(JSON, default=dict)
+    cover_letter: Mapped[str] = mapped_column(Text, default="")
+    notes: Mapped[str] = mapped_column(Text, default="")
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+
+
+# Ordered application stages shared by the API and the board UI.
+STAGES = ["saved", "drafting", "applied", "interview", "offer", "rejected"]
 
 
 _engine = None
@@ -213,3 +268,164 @@ def ping() -> bool:
         return True
     except Exception:
         return False
+
+
+# --------------------------------------------------------------------------- #
+# Profile CRUD                                                                 #
+# --------------------------------------------------------------------------- #
+_PROFILE_FIELDS = (
+    "full_name", "headline", "email", "phone", "location", "summary",
+    "links", "skills", "experience", "projects", "education",
+)
+
+
+def _profile_to_dict(p: "Profile") -> dict:
+    return {
+        "full_name": p.full_name,
+        "headline": p.headline,
+        "email": p.email,
+        "phone": p.phone,
+        "location": p.location,
+        "summary": p.summary,
+        "links": p.links or [],
+        "skills": p.skills or [],
+        "experience": p.experience or [],
+        "projects": p.projects or [],
+        "education": p.education or [],
+        "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+    }
+
+
+def get_profile(session_id: str) -> Optional[dict]:
+    with _session() as s:
+        if s is None:
+            return None
+        p = s.query(Profile).filter(Profile.session_id == (session_id or "anonymous")).first()
+        return _profile_to_dict(p) if p else None
+
+
+def upsert_profile(session_id: str, data: dict) -> Optional[dict]:
+    with _session() as s:
+        if s is None:
+            return None
+        sid = session_id or "anonymous"
+        p = s.query(Profile).filter(Profile.session_id == sid).first()
+        if p is None:
+            p = Profile(session_id=sid)
+            s.add(p)
+        for field in _PROFILE_FIELDS:
+            if field in data and data[field] is not None:
+                setattr(p, field, data[field])
+        s.flush()
+        return _profile_to_dict(p)
+
+
+# --------------------------------------------------------------------------- #
+# Application CRUD                                                             #
+# --------------------------------------------------------------------------- #
+def _app_to_dict(a: "Application") -> dict:
+    return {
+        "id": a.id,
+        "company": a.company,
+        "role": a.role,
+        "location": a.location,
+        "posting_url": a.posting_url,
+        "posting_text": a.posting_text,
+        "stage": a.stage,
+        "match_score": a.match_score,
+        "requirements": a.requirements or [],
+        "gaps": a.gaps or [],
+        "tailored_resume": a.tailored_resume or {},
+        "cover_letter": a.cover_letter or "",
+        "notes": a.notes or "",
+        "sort_order": a.sort_order,
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+        "updated_at": a.updated_at.isoformat() if a.updated_at else None,
+    }
+
+
+_APP_FIELDS = (
+    "company", "role", "location", "posting_url", "posting_text", "stage",
+    "match_score", "requirements", "gaps", "tailored_resume", "cover_letter",
+    "notes", "sort_order",
+)
+
+
+def list_applications(session_id: str) -> List[dict]:
+    with _session() as s:
+        if s is None:
+            return []
+        rows = (
+            s.query(Application)
+            .filter(Application.session_id == (session_id or "anonymous"))
+            .order_by(Application.sort_order.asc(), Application.created_at.desc())
+            .all()
+        )
+        return [_app_to_dict(a) for a in rows]
+
+
+def create_application(session_id: str, data: dict) -> Optional[dict]:
+    with _session() as s:
+        if s is None:
+            return None
+        a = Application(session_id=session_id or "anonymous")
+        for field in _APP_FIELDS:
+            if field in data and data[field] is not None:
+                setattr(a, field, data[field])
+        s.add(a)
+        s.flush()
+        return _app_to_dict(a)
+
+
+def update_application(session_id: str, app_id: int, data: dict) -> Optional[dict]:
+    with _session() as s:
+        if s is None:
+            return None
+        a = (
+            s.query(Application)
+            .filter(Application.id == app_id, Application.session_id == (session_id or "anonymous"))
+            .first()
+        )
+        if a is None:
+            return None
+        for field in _APP_FIELDS:
+            if field in data and data[field] is not None:
+                setattr(a, field, data[field])
+        s.flush()
+        return _app_to_dict(a)
+
+
+def delete_application(session_id: str, app_id: int) -> bool:
+    with _session() as s:
+        if s is None:
+            return False
+        a = (
+            s.query(Application)
+            .filter(Application.id == app_id, Application.session_id == (session_id or "anonymous"))
+            .first()
+        )
+        if a is None:
+            return False
+        s.delete(a)
+        return True
+
+
+def funnel_stats(session_id: str) -> dict:
+    """Counts per stage plus a simple weekly created-count series."""
+    with _session() as s:
+        if s is None:
+            return {"stages": {st: 0 for st in STAGES}, "total": 0, "weekly": []}
+        rows = (
+            s.query(Application)
+            .filter(Application.session_id == (session_id or "anonymous"))
+            .all()
+        )
+        stages = {st: 0 for st in STAGES}
+        weekly: dict = {}
+        for a in rows:
+            stages[a.stage] = stages.get(a.stage, 0) + 1
+            if a.created_at:
+                wk = a.created_at.strftime("%Y-W%W")
+                weekly[wk] = weekly.get(wk, 0) + 1
+        weekly_series = [{"week": k, "count": v} for k, v in sorted(weekly.items())]
+        return {"stages": stages, "total": len(rows), "weekly": weekly_series}

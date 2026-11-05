@@ -34,16 +34,25 @@ from app.config import settings
 from app.models.schemas import (
     AnalyzeRequest,
     AnalysisResult,
+    ApplicationCreateRequest,
+    ApplicationUpdateRequest,
+    ApplicationsResponse,
     ChatRequest,
     ChatResponse,
     FormatCheckRequest,
     FormatCheckResult,
+    FunnelResponse,
     GeneratePdfRequest,
     GenerateResumeRequest,
     GenerateResumeResult,
     LocalizeRequest,
     LocalizeResult,
+    ProfileRequest,
+    ProfileResponse,
     ScoreHistoryResponse,
+    SeedProfileRequest,
+    TailorRequest,
+    TailorResult,
     UploadResponse,
 )
 from app.services import database
@@ -53,6 +62,7 @@ from app.services.llm_provider import get_llm
 from app.services.localization import localize_resume
 from app.services.pdf_generator import generate_pdf, list_templates, render_html
 from app.services.resume_builder import generate_resume
+from app.services.tailor import tailor_application
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -259,3 +269,152 @@ def render_preview_endpoint(req: GeneratePdfRequest) -> Response:
         logger.exception("Preview render failed")
         raise HTTPException(status_code=500, detail=f"Preview render failed: {exc}")
     return Response(content=html, media_type="text/html")
+
+
+# ========================================================================== #
+# Career profile & application tracking (dossier-style workflow)             #
+# ========================================================================== #
+@app.get("/api/profile", response_model=ProfileResponse)
+def get_profile_endpoint(session_id: str = "") -> ProfileResponse:
+    return ProfileResponse(enabled=database.is_enabled(), profile=database.get_profile(session_id))
+
+
+@app.put("/api/profile", response_model=ProfileResponse)
+def put_profile_endpoint(req: ProfileRequest) -> ProfileResponse:
+    if not database.is_enabled():
+        raise HTTPException(status_code=503, detail="Persistence is not configured (set DATABASE_URL).")
+    saved = database.upsert_profile(req.session_id, req.profile.model_dump())
+    return ProfileResponse(enabled=True, profile=saved)
+
+
+@app.post("/api/profile/seed", response_model=ProfileResponse)
+def seed_profile_endpoint(req: SeedProfileRequest) -> ProfileResponse:
+    """Seed a profile from an uploaded/pasted resume (parser + optional LLM)."""
+    parsed = req.parsed
+    if parsed is None and req.resume_text.strip():
+        parsed = parser.parse_resume(req.resume_text)
+    if parsed is None:
+        raise HTTPException(status_code=400, detail="Provide resume_text or parsed.")
+    c = parsed.contact
+    profile = {
+        "full_name": c.name or "",
+        "email": c.email or "",
+        "phone": c.phone or "",
+        "location": c.location or "",
+        "links": c.links or [],
+        "summary": "",
+        "skills": [],
+        "experience": [],
+        "projects": [],
+        "education": [],
+    }
+    for s in parsed.sections:
+        title = (s.title or "").lower()
+        if "summary" in title or "profile" in title or "objective" in title:
+            profile["summary"] = " ".join(s.lines)
+        elif "skill" in title:
+            skills: list = []
+            for line in s.lines:
+                skills.extend([t.strip() for t in line.replace("•", ",").split(",") if t.strip()])
+            profile["skills"] = skills[:40]
+        elif "experience" in title or "employment" in title:
+            profile["experience"].append({"role": s.title, "company": "", "dates": "", "bullets": s.lines})
+        elif "project" in title:
+            profile["projects"].extend([{"name": ln, "description": ""} for ln in s.lines])
+        elif "education" in title:
+            profile["education"].extend([{"degree": ln, "institution": "", "year": ""} for ln in s.lines])
+    if not database.is_enabled():
+        return ProfileResponse(enabled=False, profile=profile)
+    saved = database.upsert_profile(req.session_id, profile)
+    return ProfileResponse(enabled=True, profile=saved)
+
+
+@app.get("/api/applications", response_model=ApplicationsResponse)
+def list_applications_endpoint(session_id: str = "") -> ApplicationsResponse:
+    return ApplicationsResponse(
+        enabled=database.is_enabled(),
+        stages=database.STAGES,
+        applications=database.list_applications(session_id),
+    )
+
+
+@app.post("/api/applications", response_model=dict)
+def create_application_endpoint(req: ApplicationCreateRequest) -> dict:
+    if not database.is_enabled():
+        raise HTTPException(status_code=503, detail="Persistence is not configured (set DATABASE_URL).")
+    created = database.create_application(req.session_id, req.application.model_dump())
+    if created is None:
+        raise HTTPException(status_code=500, detail="Could not create application.")
+    return created
+
+
+@app.patch("/api/applications/{app_id}", response_model=dict)
+def update_application_endpoint(app_id: int, req: ApplicationUpdateRequest) -> dict:
+    if not database.is_enabled():
+        raise HTTPException(status_code=503, detail="Persistence is not configured (set DATABASE_URL).")
+    updated = database.update_application(req.session_id, app_id, req.patch)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    return updated
+
+
+@app.delete("/api/applications/{app_id}")
+def delete_application_endpoint(app_id: int, session_id: str = "") -> dict:
+    ok = database.delete_application(session_id, app_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Application not found.")
+    return {"deleted": True, "id": app_id}
+
+
+@app.get("/api/funnel", response_model=FunnelResponse)
+def funnel_endpoint(session_id: str = "") -> FunnelResponse:
+    stats = database.funnel_stats(session_id)
+    return FunnelResponse(enabled=database.is_enabled(), **stats)
+
+
+@app.post("/api/tailor", response_model=TailorResult)
+def tailor_endpoint(req: TailorRequest) -> TailorResult:
+    if not req.posting.strip():
+        raise HTTPException(status_code=400, detail="posting is required.")
+    # Prefer the saved profile; fall back to one supplied in the request.
+    profile = database.get_profile(req.session_id)
+    if profile is None and req.profile is not None:
+        profile = req.profile.model_dump()
+    if not profile:
+        raise HTTPException(status_code=400, detail="Create your profile first, then tailor an application.")
+
+    result = tailor_application(req.posting, profile)
+    source = "llm" if get_llm().is_live else "heuristic"
+
+    application_id = None
+    if req.save and database.is_enabled():
+        created = database.create_application(
+            req.session_id,
+            {
+                "company": result.get("company", ""),
+                "role": result.get("role", ""),
+                "location": result.get("location", ""),
+                "posting_text": req.posting,
+                "stage": "drafting",
+                "match_score": result.get("match_score", 0),
+                "requirements": result.get("requirements", []),
+                "gaps": result.get("gaps", []),
+                "tailored_resume": result.get("tailored_resume", {}),
+                "cover_letter": result.get("cover_letter", ""),
+            },
+        )
+        if created:
+            application_id = created["id"]
+
+    return TailorResult(
+        company=result.get("company", ""),
+        role=result.get("role", ""),
+        location=result.get("location", ""),
+        match_score=result.get("match_score", 0),
+        requirements=result.get("requirements", []),
+        gaps=result.get("gaps", []),
+        tailored_resume=result.get("tailored_resume", {}),
+        cover_letter=result.get("cover_letter", ""),
+        application_id=application_id,
+        source=source,
+    )

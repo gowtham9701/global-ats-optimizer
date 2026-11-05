@@ -94,8 +94,8 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Optimization Dashboard</h1>
-          <p className="text-slate-500 text-sm">
+          <h1 className="text-2xl font-extrabold text-ink">Optimization Dashboard</h1>
+          <p className="text-muted text-sm">
             Target: <span className="font-semibold capitalize">{targetCountry}</span> ·
             Template: <span className="font-semibold capitalize">{template.replace('_', ' ')}</span>
           </p>
@@ -104,20 +104,20 @@ export default function Dashboard() {
           <select
             value={targetCountry}
             onChange={(e) => { setTargetCountry(e.target.value); setLocalized(null) }}
-            className="rounded-full border border-slate-200 px-3 py-2 text-sm capitalize focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="rounded-full border border-line-input px-3 py-2 text-sm capitalize focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           >
             {COUNTRIES.map((c) => <option key={c} value={c} className="capitalize">{c}</option>)}
           </select>
           <button
             onClick={() => navigate('/builder')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:border-brand-400"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-line-input text-muted text-sm font-medium hover:border-brand-400"
           >
             <PenLine size={16} /> Open in editor
           </button>
           <button
             onClick={runAnalysis}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:border-brand-400"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-line-input text-muted text-sm font-medium hover:border-brand-400"
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />} Re-analyze
           </button>
@@ -149,7 +149,7 @@ export default function Dashboard() {
               <ScoreBars breakdown={analysis.breakdown} />
             </Card>
             <Card title="AI Agent Briefing" icon={Bot}>
-              <p className="text-sm text-slate-600 leading-relaxed">{analysis.agent_narrative}</p>
+              <p className="text-sm text-muted leading-relaxed">{analysis.agent_narrative}</p>
             </Card>
           </div>
 
@@ -159,7 +159,7 @@ export default function Dashboard() {
               <ScoreHistory refreshKey={historyKey} />
             </Card>
             <Card title={`Country Format Check · ${targetCountry}`} icon={Globe2}>
-              <p className="text-sm text-slate-500 mb-3">
+              <p className="text-sm text-muted mb-3">
                 Verify this resume against {targetCountry} ATS/format conventions — works for uploaded resumes too.
               </p>
               <FormatCheck getText={() => resumeText} targetCountry={targetCountry} />
@@ -186,7 +186,7 @@ export default function Dashboard() {
             <Card title="Recommendations" icon={Wrench}>
               <ul className="space-y-2">
                 {analysis.recommendations.map((r, i) => (
-                  <li key={i} className="text-sm text-slate-600 flex gap-2">
+                  <li key={i} className="text-sm text-muted flex gap-2">
                     <span className="text-brand-500">▹</span> {r}
                   </li>
                 ))}
@@ -195,7 +195,7 @@ export default function Dashboard() {
             <Card title="Grounded Knowledge (RAG)" icon={BookOpen}>
               <ul className="space-y-2">
                 {analysis.rag_context.map((c, i) => (
-                  <li key={i} className="text-xs text-slate-500 bg-slate-50 rounded-lg p-2.5">{c}</li>
+                  <li key={i} className="text-xs text-muted bg-surface rounded-lg p-2.5">{c}</li>
                 ))}
               </ul>
             </Card>
@@ -217,7 +217,7 @@ export default function Dashboard() {
           <Card title={`Multi-Country Converter → ${targetCountry}`} icon={Globe2}>
             {!localized ? (
               <div className="text-center py-6">
-                <p className="text-slate-500 text-sm mb-4">
+                <p className="text-muted text-sm mb-4">
                   Convert this resume to {targetCountry} conventions (structure + privacy localization).
                 </p>
                 <button
@@ -232,7 +232,7 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-4">
                 {localized.removed_fields?.length > 0 && (
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-muted">
                     <span className="font-semibold">Removed for privacy:</span>{' '}
                     {localized.removed_fields.join(', ')}
                   </div>
@@ -242,7 +242,7 @@ export default function Dashboard() {
                   rightTitle={`${targetCountry} Localized`}
                   left={resumeText}
                   right={
-                    <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans">
+                    <pre className="text-sm text-ink whitespace-pre-wrap font-sans">
                       {localized.converted_text}
                     </pre>
                   }
@@ -250,7 +250,7 @@ export default function Dashboard() {
                 {localized.structural_notes?.length > 0 && (
                   <ul className="space-y-1.5 pt-2">
                     {localized.structural_notes.map((n, i) => (
-                      <li key={i} className="text-xs text-slate-500 flex gap-2">
+                      <li key={i} className="text-xs text-muted flex gap-2">
                         <span className="text-brand-500">▹</span> {n}
                       </li>
                     ))}

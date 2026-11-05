@@ -30,8 +30,8 @@ export default function FileDropzone({ onFile, loading, fileName }) {
       onMouseLeave={() => setHover(false)}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
-      className={`relative cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition
-        ${isDragActive || hover ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-white'}`}
+      className={`relative cursor-pointer rounded-panel border-2 border-dashed p-10 text-center transition
+        ${isDragActive || hover ? 'border-brand-500 bg-brand-50' : 'border-line-input bg-card'}`}
     >
       <input {...getInputProps()} />
       <AnimatePresence mode="wait">
@@ -44,15 +44,15 @@ export default function FileDropzone({ onFile, loading, fileName }) {
           <motion.div key="done" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-3 text-emerald-600">
             <FileCheck2 size={40} />
             <p className="font-semibold">{fileName}</p>
-            <p className="text-sm text-slate-400">Click to replace</p>
+            <p className="text-sm text-faint">Click to replace</p>
           </motion.div>
         ) : (
           <motion.div key="idle" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3">
-            <motion.div animate={{ y: isDragActive ? -6 : 0 }} className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white shadow-lg shadow-brand-600/30">
+            <motion.div animate={{ y: isDragActive ? -6 : 0 }} className="w-16 h-16 rounded-card bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white shadow-lg shadow-brand-600/30">
               <UploadCloud size={30} />
             </motion.div>
-            <p className="font-semibold text-slate-700">Drag & drop your resume</p>
-            <p className="text-sm text-slate-400">PDF, DOCX or TXT · up to 10MB</p>
+            <p className="font-semibold text-ink">Drag & drop your resume</p>
+            <p className="text-sm text-faint">PDF, DOCX or TXT · up to 10MB</p>
           </motion.div>
         )}
       </AnimatePresence>

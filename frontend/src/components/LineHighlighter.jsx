@@ -5,7 +5,7 @@ const STYLES = {
   good: { bg: 'bg-emerald-50', border: 'border-emerald-400', text: 'text-emerald-700', Icon: CheckCircle2 },
   warn: { bg: 'bg-amber-50', border: 'border-amber-400', text: 'text-amber-700', Icon: AlertTriangle },
   bad: { bg: 'bg-rose-50', border: 'border-rose-400', text: 'text-rose-700', Icon: XCircle },
-  neutral: { bg: 'bg-white', border: 'border-slate-200', text: 'text-slate-500', Icon: null },
+  neutral: { bg: 'bg-card', border: 'border-line-input', text: 'text-muted', Icon: null },
 }
 
 export default function LineHighlighter({ lines = [] }) {
@@ -24,11 +24,11 @@ export default function LineHighlighter({ lines = [] }) {
           >
             <div className="flex items-start gap-2">
               {Icon && <Icon size={16} className={`${s.text} mt-0.5 shrink-0`} />}
-              <p className="text-sm text-slate-700 leading-snug">{line.text}</p>
+              <p className="text-sm text-ink leading-snug">{line.text}</p>
             </div>
             {line.reason && <p className={`text-xs mt-1 ${s.text}`}>{line.reason}</p>}
             {line.suggestion && (
-              <p className="text-xs mt-1 text-slate-500 italic">↳ {line.suggestion}</p>
+              <p className="text-xs mt-1 text-muted italic">↳ {line.suggestion}</p>
             )}
           </motion.div>
         )

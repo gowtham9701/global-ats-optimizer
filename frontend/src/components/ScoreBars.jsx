@@ -21,10 +21,10 @@ export default function ScoreBars({ breakdown }) {
       {Object.entries(breakdown).map(([key, value], i) => (
         <div key={key}>
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-slate-600 font-medium">{LABELS[key] || key}</span>
-            <span className="text-slate-400">{value}/100</span>
+            <span className="text-muted font-medium">{LABELS[key] || key}</span>
+            <span className="text-faint">{value}/100</span>
           </div>
-          <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+          <div className="h-2.5 rounded-full bg-surface overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${value}%` }}

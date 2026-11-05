@@ -49,7 +49,7 @@ export default function ScoreDial({ score = 0, size = 180, label = 'ATS Score' }
         >
           {display}
         </motion.span>
-        <span className="text-xs uppercase tracking-widest text-slate-400">{label}</span>
+        <span className="text-xs uppercase tracking-widest text-faint">{label}</span>
       </div>
     </div>
   )

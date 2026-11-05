@@ -43,7 +43,7 @@ export default function FormatCheck({ getText, targetCountry = 'global', compact
         <button
           onClick={verify}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:border-brand-400 transition"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-line-input text-ink text-sm font-semibold hover:border-brand-400 transition"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Globe2 size={16} className="text-brand-600" />}
           Verify {label} format
@@ -72,13 +72,13 @@ export default function FormatCheck({ getText, targetCountry = 'global', compact
                   <Icon size={16} className={`${s.cls} mt-0.5 shrink-0`} />
                   <div>
                     <div className={`text-sm font-semibold ${s.cls}`}>{r.label}</div>
-                    <div className="text-xs text-slate-600">{r.detail}</div>
+                    <div className="text-xs text-muted">{r.detail}</div>
                   </div>
                 </div>
               )
             })}
             {result.note && (
-              <div className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">{result.note}</div>
+              <div className="text-xs text-muted bg-surface rounded-lg px-3 py-2">{result.note}</div>
             )}
           </motion.div>
         )}

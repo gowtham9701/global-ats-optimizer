@@ -2,8 +2,92 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Warm, editorial design tokens (light + dark). Near-monochrome: a beige
+ * paper shell, near-black primary actions, hairline borders, muted accents.
+ */
 :root {
   color-scheme: light;
+  --paper: #eeebe4;
+  --surface: #f4f2ed;
+  --card: #fbfaf7;
+  --canvas: #e8e5de;
+  --input: #ffffff;
+
+  --ink: #1d1c1a;
+  --muted: #69655d;
+  --faint: #a29d94;
+
+  --primary: #222222;
+  --primary-hover: #3a3936;
+  --on-primary: #fbfaf7;
+
+  --line: rgb(29 28 26 / 0.10);
+  --line-strong: rgb(29 28 26 / 0.18);
+  --line-input: rgb(29 28 26 / 0.26);
+  --hover: rgb(29 28 26 / 0.05);
+  --selected: rgb(29 28 26 / 0.07);
+
+  --danger: #9a3a2c;
+  --danger-surface: #f7ece8;
+  --warning: #6b4f1a;
+  --warning-surface: #f3ecd9;
+  --success: #2f6b4a;
+  --success-surface: #e6efe8;
+
+  --status-draft: #a29d94;
+  --status-sent: #5b7aa8;
+  --status-screening: #4f8ba0;
+  --status-interview: #8a7bb0;
+  --status-offer: #b89b4a;
+  --status-accepted: #4f8a63;
+  --status-rejected: #b06a56;
+
+  --shadow-raised: 0 1px 2px rgb(40 35 25 / 0.08);
+  --shadow-cta: 0 1px 3px rgb(40 35 25 / 0.14);
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.05), 0 10px 34px rgb(40 35 25 / 0.08);
+}
+
+.dark {
+  color-scheme: dark;
+  --paper: #1a1917;
+  --surface: #22201d;
+  --card: #2a2825;
+  --canvas: #141311;
+  --input: #1e1c1a;
+
+  --ink: #f0ede7;
+  --muted: #aaa59c;
+  --faint: #6e6961;
+
+  --primary: #ebe7df;
+  --primary-hover: #ffffff;
+  --on-primary: #1d1c1a;
+
+  --line: rgb(240 237 231 / 0.10);
+  --line-strong: rgb(240 237 231 / 0.22);
+  --line-input: rgb(240 237 231 / 0.24);
+  --hover: rgb(240 237 231 / 0.07);
+  --selected: rgb(240 237 231 / 0.10);
+
+  --danger: #f08a78;
+  --danger-surface: rgb(239 68 68 / 0.14);
+  --warning: #e3b765;
+  --warning-surface: rgb(245 158 11 / 0.14);
+  --success: #74c495;
+  --success-surface: rgb(74 222 128 / 0.12);
+
+  --status-draft: #827c73;
+  --status-sent: #7b93b6;
+  --status-screening: #6fa0b2;
+  --status-interview: #a294c0;
+  --status-offer: #c9ad63;
+  --status-accepted: #6fa684;
+  --status-rejected: #c58571;
+
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-cta: 0 1px 3px rgb(0 0 0 / 0.4);
+  --shadow-panel: 0 8px 32px rgb(0 0 0 / 0.5);
 }
 
 html, body, #root {
@@ -12,18 +96,43 @@ html, body, #root {
 
 body {
   margin: 0;
-  background: #f8fafc;
+  background: var(--paper);
+  color: var(--ink);
   font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbar for the split panes */
+/* Editorial page + section titles (serif) */
+.title-xl {
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+.title-md {
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+/* Thin scrollbars in the app's tones */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ink) 20%, transparent) transparent;
+}
 .thin-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
-.thin-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-.thin-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--ink) 32%, transparent);
+}
 
 .glass {
-  background: rgba(255, 255, 255, 0.7);
+  background: color-mix(in srgb, var(--paper) 82%, transparent);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid var(--line);
 }

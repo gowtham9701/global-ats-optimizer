@@ -70,6 +70,61 @@ export async function fetchTools() {
   return data
 }
 
+// ----- Career profile & application tracking (dossier-style workflow) ----- //
+export async function fetchProfile() {
+  const { data } = await api.get('/api/profile', { params: { session_id: getSessionId() } })
+  return data
+}
+
+export async function saveProfile(profile) {
+  const { data } = await api.put('/api/profile', { session_id: getSessionId(), profile })
+  return data
+}
+
+export async function seedProfile({ resumeText, parsed }) {
+  const { data } = await api.post('/api/profile/seed', {
+    session_id: getSessionId(),
+    resume_text: resumeText || '',
+    parsed: parsed || null,
+  })
+  return data
+}
+
+export async function fetchApplications() {
+  const { data } = await api.get('/api/applications', { params: { session_id: getSessionId() } })
+  return data
+}
+
+export async function createApplication(application) {
+  const { data } = await api.post('/api/applications', { session_id: getSessionId(), application })
+  return data
+}
+
+export async function updateApplication(id, patch) {
+  const { data } = await api.patch(`/api/applications/${id}`, { session_id: getSessionId(), patch })
+  return data
+}
+
+export async function deleteApplication(id) {
+  const { data } = await api.delete(`/api/applications/${id}`, { params: { session_id: getSessionId() } })
+  return data
+}
+
+export async function fetchFunnel() {
+  const { data } = await api.get('/api/funnel', { params: { session_id: getSessionId() } })
+  return data
+}
+
+export async function tailorApplication({ posting, profile, save = true }) {
+  const { data } = await api.post('/api/tailor', {
+    session_id: getSessionId(),
+    posting,
+    profile: profile || null,
+    save,
+  })
+  return data
+}
+
 export async function generatePdf({ parsed, template, accentColor }) {
   const response = await api.post(
     '/api/generate-pdf',

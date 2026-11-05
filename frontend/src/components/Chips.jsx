@@ -6,7 +6,7 @@ export default function Chips({ items = [], tone = 'green' }) {
     red: 'bg-rose-100 text-rose-700',
     blue: 'bg-brand-100 text-brand-700',
   }
-  if (!items.length) return <p className="text-sm text-slate-400">None</p>
+  if (!items.length) return <p className="text-sm text-faint">None</p>
   return (
     <div className="flex flex-wrap gap-2">
       {items.map((item, i) => (

@@ -1,26 +1,34 @@
-import { Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar.jsx'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import AppShell from './components/AppShell.jsx'
 import CopilotChat from './components/CopilotChat.jsx'
-import Home from './pages/Home.jsx'
+import DashboardHome from './pages/DashboardHome.jsx'
+import Profile from './pages/Profile.jsx'
+import Applications from './pages/Applications.jsx'
+import NewApplication from './pages/NewApplication.jsx'
 import Builder from './pages/Builder.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import { BRAND } from './config/brand.js'
 
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/builder" element={<Builder />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </main>
-      <footer className="py-6 text-center text-sm text-slate-400">
-        Global ATS Resume Optimizer & Agentic Architect · Open-source · Zero-cost AI
+    <AppShell>
+      <Routes>
+        <Route path="/" element={<DashboardHome />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/applications" element={<Applications />} />
+        <Route path="/new" element={<NewApplication />} />
+        <Route path="/resume" element={<Builder />} />
+        <Route path="/analysis" element={<Dashboard />} />
+        {/* Back-compat redirects from the previous ATS-only app */}
+        <Route path="/builder" element={<Navigate to="/resume" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/analysis" replace />} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <footer className="py-6 text-center text-xs text-ink-400">
+        {BRAND.name} · {BRAND.tagline} · self-hosted, your data on your server
       </footer>
-      {/* Conversational copilot available across the whole app */}
       <CopilotChat />
-    </div>
+    </AppShell>
   )
 }

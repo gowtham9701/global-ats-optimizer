@@ -42,7 +42,7 @@ export default function AtsScore({ getText, jobDescription = '', targetCountry =
       <button
         onClick={verify}
         disabled={loading}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:border-brand-400 transition"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-line-input text-ink text-sm font-semibold hover:border-brand-400 transition"
       >
         {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} className="text-brand-600" />}
         Verify ATS Score
@@ -58,7 +58,7 @@ export default function AtsScore({ getText, jobDescription = '', targetCountry =
           >
             <Gauge size={15} className={t.txt} />
             <span className={`font-extrabold ${t.txt}`}>{score}</span>
-            <span className="text-xs text-slate-400">/100</span>
+            <span className="text-xs text-faint">/100</span>
             <span className={`text-xs font-semibold ${t.txt}`}>· {t.label}</span>
           </motion.div>
         )}

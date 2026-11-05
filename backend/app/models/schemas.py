@@ -173,3 +173,93 @@ class TemplateInfo(BaseModel):
     id: str
     name: str
     description: str
+
+
+# ----- Career profile & application tracking (dossier-style workflow) ----- #
+class CareerProfile(BaseModel):
+    full_name: str = ""
+    headline: str = ""
+    email: str = ""
+    phone: str = ""
+    location: str = ""
+    summary: str = ""
+    links: List[str] = Field(default_factory=list)
+    skills: List[str] = Field(default_factory=list)
+    experience: List[dict] = Field(default_factory=list)
+    projects: List[dict] = Field(default_factory=list)
+    education: List[dict] = Field(default_factory=list)
+
+
+class ProfileRequest(BaseModel):
+    session_id: str = ""
+    profile: CareerProfile
+
+
+class ProfileResponse(BaseModel):
+    enabled: bool = False
+    profile: Optional[dict] = None
+
+
+class SeedProfileRequest(BaseModel):
+    session_id: str = ""
+    resume_text: str = ""
+    parsed: Optional[ParsedResume] = None
+
+
+class ApplicationIn(BaseModel):
+    company: str = ""
+    role: str = ""
+    location: str = ""
+    posting_url: str = ""
+    posting_text: str = ""
+    stage: str = "saved"
+    match_score: int = 0
+    requirements: List[str] = Field(default_factory=list)
+    gaps: List[str] = Field(default_factory=list)
+    tailored_resume: dict = Field(default_factory=dict)
+    cover_letter: str = ""
+    notes: str = ""
+    sort_order: int = 0
+
+
+class ApplicationCreateRequest(BaseModel):
+    session_id: str = ""
+    application: ApplicationIn
+
+
+class ApplicationUpdateRequest(BaseModel):
+    session_id: str = ""
+    patch: dict = Field(default_factory=dict)
+
+
+class ApplicationsResponse(BaseModel):
+    enabled: bool = False
+    stages: List[str] = Field(default_factory=list)
+    applications: List[dict] = Field(default_factory=list)
+
+
+class TailorRequest(BaseModel):
+    session_id: str = ""
+    posting: str
+    profile: Optional[CareerProfile] = None
+    save: bool = True
+
+
+class TailorResult(BaseModel):
+    company: str = ""
+    role: str = ""
+    location: str = ""
+    match_score: int = 0
+    requirements: List[str] = Field(default_factory=list)
+    gaps: List[str] = Field(default_factory=list)
+    tailored_resume: dict = Field(default_factory=dict)
+    cover_letter: str = ""
+    application_id: Optional[int] = None
+    source: str = "heuristic"
+
+
+class FunnelResponse(BaseModel):
+    enabled: bool = False
+    stages: dict = Field(default_factory=dict)
+    total: int = 0
+    weekly: List[dict] = Field(default_factory=list)

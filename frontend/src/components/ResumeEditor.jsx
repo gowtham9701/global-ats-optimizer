@@ -49,12 +49,12 @@ export default function ResumeEditor({ parsed, onChange }) {
 
   const field = (label, value, onChangeVal, placeholder) => (
     <div>
-      <label className="block text-[11px] uppercase tracking-wide text-slate-400 mb-1">{label}</label>
+      <label className="block text-[11px] uppercase tracking-wide text-faint mb-1">{label}</label>
       <input
         value={value || ''}
         onChange={(e) => onChangeVal(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+        className="w-full rounded-lg border border-line-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
       />
     </div>
   )
@@ -62,8 +62,8 @@ export default function ResumeEditor({ parsed, onChange }) {
   return (
     <div className="space-y-5">
       {/* Contact */}
-      <div className="rounded-2xl border border-slate-200 p-4">
-        <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold">
+      <div className="rounded-card border border-line-input p-4">
+        <div className="flex items-center gap-2 mb-3 text-ink font-semibold">
           <User size={16} className="text-brand-600" /> Contact
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
@@ -86,18 +86,18 @@ export default function ResumeEditor({ parsed, onChange }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="rounded-2xl border border-slate-200 p-4"
+            className="rounded-card border border-line-input p-4"
           >
             <div className="flex items-center gap-2 mb-3">
-              <GripVertical size={16} className="text-slate-300" />
+              <GripVertical size={16} className="text-faint" />
               <input
                 value={section.title}
                 onChange={(e) => setSectionTitle(si, e.target.value)}
-                className="flex-1 font-semibold text-slate-800 bg-transparent border-b border-transparent focus:border-brand-400 focus:outline-none py-1"
+                className="flex-1 font-semibold text-ink bg-transparent border-b border-transparent focus:border-brand-400 focus:outline-none py-1"
               />
               <button
                 onClick={() => removeSection(si)}
-                className="text-slate-300 hover:text-rose-500 transition"
+                className="text-faint hover:text-rose-500 transition"
                 title="Delete section"
               >
                 <Trash2 size={16} />
@@ -113,11 +113,11 @@ export default function ResumeEditor({ parsed, onChange }) {
                     onChange={(e) => setLine(si, li, e.target.value)}
                     rows={1}
                     placeholder="Add an achievement bullet…"
-                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="flex-1 rounded-lg border border-line-input px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                   />
                   <button
                     onClick={() => removeLine(si, li)}
-                    className="text-slate-300 hover:text-rose-500 mt-2 opacity-0 group-hover:opacity-100 transition"
+                    className="text-faint hover:text-rose-500 mt-2 opacity-0 group-hover:opacity-100 transition"
                     title="Delete line"
                   >
                     <Trash2 size={14} />
@@ -137,7 +137,7 @@ export default function ResumeEditor({ parsed, onChange }) {
 
       <button
         onClick={addSection}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-slate-300 text-slate-500 text-sm font-medium hover:border-brand-400 hover:text-brand-600 transition"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-line-input text-muted text-sm font-medium hover:border-brand-400 hover:text-brand-600 transition"
       >
         <Plus size={15} /> Add section
       </button>

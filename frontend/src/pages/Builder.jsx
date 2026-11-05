@@ -134,32 +134,32 @@ export default function Builder() {
 
   // ----- Choose mode -----
   if (mode === 'choose') {
-    const card = (icon, title, desc2, onClick, accent) => (
+    const card = (icon, title, desc2, onClick) => (
       <motion.button
-        whileHover={{ y: -6 }}
+        whileHover={{ y: -3 }}
         onClick={onClick}
-        className="text-left rounded-2xl bg-white shadow-md p-6 border-2 border-transparent hover:border-brand-500 transition"
+        className="text-left rounded-card bg-card shadow-raised p-6 border border-line hover:border-line-strong transition-colors"
       >
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${accent} grid place-items-center text-white mb-4`}>
+        <div className="w-11 h-11 rounded-control bg-surface border border-line grid place-items-center text-ink mb-4">
           {icon}
         </div>
-        <h3 className="font-bold text-slate-800">{title}</h3>
-        <p className="text-sm text-slate-500 mt-1">{desc2}</p>
+        <h3 className="text-field font-medium text-ink">{title}</h3>
+        <p className="text-meta text-muted mt-1">{desc2}</p>
       </motion.button>
     )
     return (
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-6 py-14">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-50 text-brand-700 text-sm font-medium mb-4">
-            <Sparkles size={15} /> Resume Creator
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--selected)] text-muted text-control mb-4">
+            <Sparkles size={14} /> Resume studio
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Create your resume</h1>
-          <p className="text-slate-500 mt-2">Generate from a description, import an existing file, or start from scratch — then edit everything live.</p>
+          <h1 className="title-xl text-[40px]">Create your resume</h1>
+          <p className="text-muted text-lead mt-2">Generate from a description, import an existing file, or start from scratch — then edit everything live.</p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-5">
-          {card(<Wand2 size={22} />, 'Generate from prompt', 'Describe your background and let AI draft an ATS-ready resume.', () => setMode('prompt'), 'from-indigo-500 to-brand-700')}
-          {card(<UploadCloud size={22} />, 'Import PDF / DOCX', 'Upload an existing resume and refine it in the editor.', () => setMode('upload'), 'from-sky-500 to-blue-700')}
-          {card(<FilePlus2 size={22} />, 'Start blank', 'Build from an empty ATS-friendly template.', startBlank, 'from-emerald-500 to-teal-700')}
+        <div className="grid sm:grid-cols-3 gap-4">
+          {card(<Wand2 size={20} strokeWidth={1.75} />, 'Generate from prompt', 'Describe your background and let AI draft an ATS-ready resume.', () => setMode('prompt'))}
+          {card(<UploadCloud size={20} strokeWidth={1.75} />, 'Import PDF / DOCX', 'Upload an existing resume and refine it in the editor.', () => setMode('upload'))}
+          {card(<FilePlus2 size={20} strokeWidth={1.75} />, 'Start blank', 'Build from an empty ATS-friendly template.', startBlank)}
         </div>
       </div>
     )
@@ -169,38 +169,38 @@ export default function Builder() {
   if (mode === 'prompt') {
     return (
       <div className="max-w-3xl mx-auto px-6 py-10">
-        <button onClick={() => setMode('choose')} className="text-sm text-slate-400 hover:text-slate-600 mb-4">← Back</button>
-        <div className="rounded-3xl bg-white shadow-md p-7 space-y-5">
-          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg">
-            <Wand2 size={20} className="text-brand-600" /> Generate from description
+        <button onClick={() => setMode('choose')} className="text-meta text-muted hover:text-ink mb-4">← Back</button>
+        <div className="rounded-panel bg-card border border-line shadow-raised p-7 space-y-5">
+          <div className="flex items-center gap-2 title-md text-[20px]">
+            <Wand2 size={18} className="text-ink" /> Generate from description
           </div>
           <div className="grid sm:grid-cols-3 gap-3">
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className="rounded-control bg-input border border-line-input px-3 py-2 text-field focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="rounded-control bg-input border border-line-input px-3 py-2 text-field focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="rounded-control bg-input border border-line-input px-3 py-2 text-field focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" />
           </div>
           <textarea
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
             rows={8}
             placeholder="E.g. I'm a backend engineer with 5 years in Python, FastAPI, Docker & Kubernetes. I built a microservices platform serving 2M users and cut latency 42%. I automated CI/CD and mentored 4 engineers. Targeting a senior backend role."
-            className="thin-scroll w-full rounded-xl border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+            className="thin-scroll w-full rounded-control bg-input border border-line-input p-3 text-field focus:outline-none focus:ring-2 focus:ring-[var(--primary)] resize-none"
           />
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Target Country</label>
+            <label className="block text-[12.5px] text-muted mb-2">Target country</label>
             <div className="flex flex-wrap gap-2">
               {COUNTRIES.map((c) => (
                 <button key={c.id} onClick={() => setTargetCountry(c.id)}
-                  className={`px-3 py-1.5 rounded-full text-sm border transition ${targetCountry === c.id ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-slate-600 border-slate-200 hover:border-brand-400'}`}>
+                  className={`px-3 py-1.5 rounded-full text-control border transition-colors ${targetCountry === c.id ? 'bg-primary text-on-primary border-transparent' : 'bg-card text-muted border-line-input hover:text-ink'}`}>
                   {c.label}
                 </button>
               ))}
             </div>
           </div>
-          {error && <div className="rounded-lg bg-rose-50 text-rose-700 px-3 py-2 text-sm">{error}</div>}
+          {error && <div className="rounded-control bg-danger-surface text-danger px-3 py-2 text-meta">{error}</div>}
           <button onClick={handleGenerate} disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-brand-600 text-white font-semibold hover:bg-brand-700 shadow-lg shadow-brand-600/30">
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />} Generate Resume
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-control bg-primary text-on-primary font-medium hover:bg-primary-hover shadow-cta disabled:opacity-50">
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />} Generate resume
           </button>
         </div>
       </div>
@@ -211,9 +211,9 @@ export default function Builder() {
   if (mode === 'upload') {
     return (
       <div className="max-w-2xl mx-auto px-6 py-12">
-        <button onClick={() => setMode('choose')} className="text-sm text-slate-400 hover:text-slate-600 mb-4">← Back</button>
+        <button onClick={() => setMode('choose')} className="text-meta text-muted hover:text-ink mb-4">← Back</button>
         <FileDropzone onFile={handleUpload} loading={loading} fileName={fileName} />
-        {error && <div className="mt-4 rounded-lg bg-rose-50 text-rose-700 px-3 py-2 text-sm">{error}</div>}
+        {error && <div className="mt-4 rounded-control bg-danger-surface text-danger px-3 py-2 text-meta">{error}</div>}
       </div>
     )
   }
@@ -224,40 +224,40 @@ export default function Builder() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-6">
       {/* Sticky top toolbar */}
-      <div className="sticky top-16 z-30 -mx-6 px-6 py-3 glass border-b mb-6 flex items-center justify-between gap-3 flex-wrap">
+      <div className="sticky top-0 z-30 -mx-6 px-6 py-3 glass mb-6 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="inline-flex rounded-full bg-slate-100 p-1">
-            <button onClick={() => setView('edit')} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition ${view === 'edit' ? 'bg-white shadow text-brand-700' : 'text-slate-500 hover:text-slate-700'}`}><Pencil size={14} /> Edit</button>
-            <button onClick={() => setView('preview')} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition ${view === 'preview' ? 'bg-white shadow text-brand-700' : 'text-slate-500 hover:text-slate-700'}`}><Eye size={14} /> Preview</button>
+          <div className="inline-flex rounded-control bg-card border border-line-input p-0.5 shadow-raised">
+            <button onClick={() => setView('edit')} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-[6px] text-control transition-colors ${view === 'edit' ? 'bg-primary text-on-primary' : 'text-muted hover:text-ink'}`}><Pencil size={14} /> Edit</button>
+            <button onClick={() => setView('preview')} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-[6px] text-control transition-colors ${view === 'preview' ? 'bg-primary text-on-primary' : 'text-muted hover:text-ink'}`}><Eye size={14} /> Preview</button>
           </div>
-          {source && <span className="text-xs text-slate-400 hidden sm:inline">Drafted by: <b className="capitalize">{source === 'llm' ? 'AI model' : 'Smart builder'}</b></span>}
+          {source && <span className="text-meta text-faint hidden sm:inline">Drafted by: <b className="capitalize font-medium text-muted">{source === 'llm' ? 'AI model' : 'Smart builder'}</b></span>}
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
           <AtsScore getText={() => liveText} jobDescription={jobDescription} targetCountry={targetCountry} template={template} wordCount={wordCount} />
           <button onClick={downloadPdf} disabled={downloading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 shadow-lg shadow-brand-600/30">
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-control bg-primary text-on-primary text-field font-medium hover:bg-primary-hover shadow-cta">
             {downloading ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Download PDF
           </button>
-          <button onClick={() => navigate('/dashboard')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:border-brand-400">
-            <LayoutDashboard size={16} /> Full Analysis
+          <button onClick={() => navigate('/analysis')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-control bg-card border border-line-input text-ink text-field font-medium hover:bg-[var(--hover)]">
+            <LayoutDashboard size={16} /> Full analysis
           </button>
         </div>
       </div>
 
-      {error && <div className="mb-4 rounded-lg bg-rose-50 text-rose-700 px-3 py-2 text-sm">{error}</div>}
+      {error && <div className="mb-4 rounded-control bg-danger-surface text-danger px-3 py-2 text-meta">{error}</div>}
 
       {/* Template + style controls (always visible) */}
-      <div className="mb-5 rounded-2xl bg-white shadow-sm border border-slate-100 p-4">
+      <div className="mb-5 rounded-panel bg-card shadow-raised border border-line p-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
-            <Sparkles size={15} className="text-brand-600" /> Template & style
+          <div className="flex items-center gap-2 text-ink font-medium text-field">
+            <Sparkles size={15} className="text-muted" /> Template &amp; style
           </div>
           <div className="flex items-center gap-2">
             {ACCENTS.map((c) => (
               <button key={c} onClick={() => setAccentColor(c)} title={c}
-                className={`w-6 h-6 rounded-full border-2 transition ${accentColor === c ? 'border-slate-800 scale-110' : 'border-white shadow'}`}
+                className={`w-6 h-6 rounded-full border transition ${accentColor === c ? 'ring-2 ring-offset-2 ring-offset-card ring-[var(--ink)] scale-110 border-transparent' : 'border-line'}`}
                 style={{ backgroundColor: c }} />
             ))}
           </div>
@@ -265,7 +265,7 @@ export default function Builder() {
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {templates.map((t) => (
             <button key={t.id} onClick={() => setTemplate(t.id)}
-              className={`text-left px-3 py-2 rounded-xl border text-sm transition ${template === t.id ? 'border-brand-500 bg-brand-50 text-brand-700 font-semibold' : 'border-slate-200 text-slate-600 hover:border-brand-300'}`}>
+              className={`text-left px-3 py-2 rounded-control border text-control transition-colors ${template === t.id ? 'border-transparent bg-primary text-on-primary font-medium' : 'border-line-input text-muted hover:text-ink'}`}>
               {t.name}
             </button>
           ))}
@@ -275,15 +275,15 @@ export default function Builder() {
       {view === 'edit' ? (
         <div className="grid lg:grid-cols-2 gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold">
-              <PenLine size={16} className="text-brand-600" /> Edit your resume
+            <div className="flex items-center gap-2 mb-3 text-ink title-md text-[18px]">
+              <PenLine size={16} className="text-muted" /> Edit your resume
             </div>
             <ResumeEditor parsed={parsed} onChange={applyParsed} />
           </div>
           <div className="hidden lg:block">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-slate-700 font-bold">
-                <Eye size={16} className="text-brand-600" /> Live preview · {activeTemplateName}
+              <div className="flex items-center gap-2 text-ink title-md text-[18px]">
+                <Eye size={16} className="text-muted" /> Live preview · {activeTemplateName}
               </div>
             </div>
             <TemplatePreview parsed={parsed} template={template} accentColor={accentColor} />
@@ -291,13 +291,13 @@ export default function Builder() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-slate-700 font-bold">
-            <Eye size={16} className="text-brand-600" /> Live preview · {activeTemplateName}
+          <div className="flex items-center gap-2 text-ink title-md text-[18px]">
+            <Eye size={16} className="text-muted" /> Live preview · {activeTemplateName}
           </div>
           <div className="max-w-3xl mx-auto w-full">
             <TemplatePreview parsed={parsed} template={template} accentColor={accentColor} />
           </div>
-          <div className="max-w-3xl mx-auto w-full rounded-2xl bg-white shadow-sm border border-slate-100 p-4">
+          <div className="max-w-3xl mx-auto w-full rounded-panel bg-card shadow-raised border border-line p-4">
             <FormatCheck getText={() => liveText} targetCountry={targetCountry} />
           </div>
         </div>
