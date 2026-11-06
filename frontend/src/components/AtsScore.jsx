@@ -4,9 +4,9 @@ import { ShieldCheck, Loader2, Gauge } from 'lucide-react'
 import { analyzeResume } from '../api/client.js'
 
 function tone(score) {
-  if (score >= 80) return { ring: 'text-emerald-500', bg: 'bg-emerald-50', txt: 'text-emerald-600', label: 'ATS Ready' }
-  if (score >= 60) return { ring: 'text-amber-500', bg: 'bg-amber-50', txt: 'text-amber-600', label: 'Needs Work' }
-  return { ring: 'text-rose-500', bg: 'bg-rose-50', txt: 'text-rose-600', label: 'At Risk' }
+  if (score >= 80) return { bg: 'bg-success-surface', txt: 'text-success', label: 'ATS Ready' }
+  if (score >= 60) return { bg: 'bg-warning-surface', txt: 'text-warning', label: 'Needs Work' }
+  return { bg: 'bg-danger-surface', txt: 'text-danger', label: 'At Risk' }
 }
 
 // Compact, reusable ATS verification control. Pass a getText() that returns the
@@ -42,29 +42,29 @@ export default function AtsScore({ getText, jobDescription = '', targetCountry =
       <button
         onClick={verify}
         disabled={loading}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-line-input text-ink text-sm font-semibold hover:border-brand-400 transition"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-control bg-card border border-line-input text-ink text-field font-medium hover:bg-[var(--hover)] transition-colors"
       >
-        {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} className="text-brand-600" />}
+        {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} className="text-muted" />}
         Verify ATS Score
       </button>
 
       <AnimatePresence>
         {score != null && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${t.bg}`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-control ${t.bg}`}
           >
             <Gauge size={15} className={t.txt} />
-            <span className={`font-extrabold ${t.txt}`}>{score}</span>
+            <span className={`font-serif text-[17px] ${t.txt}`}>{score}</span>
             <span className="text-xs text-faint">/100</span>
-            <span className={`text-xs font-semibold ${t.txt}`}>· {t.label}</span>
+            <span className={`text-xs font-medium ${t.txt}`}>· {t.label}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {error && <span className="text-xs text-rose-500">{error}</span>}
+      {error && <span className="text-xs text-danger">{error}</span>}
     </div>
   )
 }

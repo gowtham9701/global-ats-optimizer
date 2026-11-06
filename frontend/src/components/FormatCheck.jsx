@@ -4,15 +4,15 @@ import { Globe2, Loader2, CheckCircle2, AlertTriangle, XCircle } from 'lucide-re
 import { checkFormat } from '../api/client.js'
 
 const STATUS = {
-  pass: { icon: CheckCircle2, cls: 'text-emerald-600', bg: 'bg-emerald-50' },
-  warn: { icon: AlertTriangle, cls: 'text-amber-600', bg: 'bg-amber-50' },
-  fail: { icon: XCircle, cls: 'text-rose-600', bg: 'bg-rose-50' },
+  pass: { icon: CheckCircle2, cls: 'text-success', bg: 'bg-success-surface' },
+  warn: { icon: AlertTriangle, cls: 'text-warning', bg: 'bg-warning-surface' },
+  fail: { icon: XCircle, cls: 'text-danger', bg: 'bg-danger-surface' },
 }
 
 function tone(score) {
-  if (score >= 80) return 'text-emerald-600'
-  if (score >= 55) return 'text-amber-600'
-  return 'text-rose-600'
+  if (score >= 80) return 'text-success'
+  if (score >= 55) return 'text-warning'
+  return 'text-danger'
 }
 
 // Reusable country-format verification. Works for generated AND uploaded resumes.
@@ -43,9 +43,9 @@ export default function FormatCheck({ getText, targetCountry = 'global', compact
         <button
           onClick={verify}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-line-input text-ink text-sm font-semibold hover:border-brand-400 transition"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-control bg-card border border-line-input text-ink text-field font-medium hover:bg-[var(--hover)] transition-colors"
         >
-          {loading ? <Loader2 size={16} className="animate-spin" /> : <Globe2 size={16} className="text-brand-600" />}
+          {loading ? <Loader2 size={16} className="animate-spin" /> : <Globe2 size={16} className="text-muted" />}
           Verify {label} format
         </button>
         {result && (

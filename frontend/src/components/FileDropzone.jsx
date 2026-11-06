@@ -41,7 +41,7 @@ export default function FileDropzone({ onFile, loading, fileName }) {
             <p className="font-medium">Parsing your resume…</p>
           </motion.div>
         ) : fileName ? (
-          <motion.div key="done" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-3 text-emerald-600">
+          <motion.div key="done" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-3 text-success">
             <FileCheck2 size={40} />
             <p className="font-semibold">{fileName}</p>
             <p className="text-sm text-faint">Click to replace</p>

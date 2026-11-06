@@ -64,7 +64,7 @@ export default function ResumeEditor({ parsed, onChange }) {
       {/* Contact */}
       <div className="rounded-card border border-line-input p-4">
         <div className="flex items-center gap-2 mb-3 text-ink font-semibold">
-          <User size={16} className="text-brand-600" /> Contact
+          <User size={16} className="text-ink" /> Contact
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
           {field('Full name', contact.name, (v) => setContact('name', v), 'Jane Smith')}
@@ -93,7 +93,7 @@ export default function ResumeEditor({ parsed, onChange }) {
               <input
                 value={section.title}
                 onChange={(e) => setSectionTitle(si, e.target.value)}
-                className="flex-1 font-semibold text-ink bg-transparent border-b border-transparent focus:border-brand-400 focus:outline-none py-1"
+                className="flex-1 font-semibold text-ink bg-transparent border-b border-transparent focus:border-line-strong focus:outline-none py-1"
               />
               <button
                 onClick={() => removeSection(si)}
@@ -107,7 +107,7 @@ export default function ResumeEditor({ parsed, onChange }) {
             <div className="space-y-2">
               {section.lines.map((line, li) => (
                 <div key={li} className="flex items-start gap-2 group">
-                  <span className="text-brand-400 mt-2.5 text-xs">▹</span>
+                  <span className="text-faint mt-2.5 text-xs">▹</span>
                   <textarea
                     value={line}
                     onChange={(e) => setLine(si, li, e.target.value)}
@@ -126,7 +126,7 @@ export default function ResumeEditor({ parsed, onChange }) {
               ))}
               <button
                 onClick={() => addLine(si)}
-                className="inline-flex items-center gap-1 text-xs text-brand-600 font-medium hover:text-brand-700 mt-1"
+                className="inline-flex items-center gap-1 text-xs text-ink font-medium hover:text-ink mt-1"
               >
                 <Plus size={13} /> Add line
               </button>
@@ -137,7 +137,7 @@ export default function ResumeEditor({ parsed, onChange }) {
 
       <button
         onClick={addSection}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-line-input text-muted text-sm font-medium hover:border-brand-400 hover:text-brand-600 transition"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-line-input text-muted text-sm font-medium hover:text-ink transition"
       >
         <Plus size={15} /> Add section
       </button>

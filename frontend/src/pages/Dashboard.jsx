@@ -92,46 +92,46 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-ink">Optimization Dashboard</h1>
-          <p className="text-muted text-sm">
-            Target: <span className="font-semibold capitalize">{targetCountry}</span> ·
-            Template: <span className="font-semibold capitalize">{template.replace('_', ' ')}</span>
+          <h1 className="title-xl text-[34px] sm:text-[40px]">Optimization</h1>
+          <p className="text-muted text-lead mt-1">
+            Target: <span className="text-ink capitalize">{targetCountry}</span> ·
+            Template: <span className="text-ink capitalize">{template.replace('_', ' ')}</span>
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <select
             value={targetCountry}
             onChange={(e) => { setTargetCountry(e.target.value); setLocalized(null) }}
-            className="rounded-full border border-line-input px-3 py-2 text-sm capitalize focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+            className="rounded-control bg-input border border-line-input px-3 py-2 text-control capitalize focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
           >
             {COUNTRIES.map((c) => <option key={c} value={c} className="capitalize">{c}</option>)}
           </select>
           <button
-            onClick={() => navigate('/builder')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-line-input text-muted text-sm font-medium hover:border-brand-400"
+            onClick={() => navigate('/resume')}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-control text-field text-muted hover:text-ink hover:bg-[var(--hover)] transition-colors"
           >
             <PenLine size={16} /> Open in editor
           </button>
           <button
             onClick={runAnalysis}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-line-input text-muted text-sm font-medium hover:border-brand-400"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-control text-field text-muted hover:text-ink hover:bg-[var(--hover)] transition-colors"
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />} Re-analyze
           </button>
           <button
             onClick={downloadPdf}
             disabled={downloading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-semibold hover:bg-primary-hover "
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-control bg-primary text-on-primary text-field font-medium hover:bg-primary-hover shadow-cta"
           >
             {downloading ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Download PDF
           </button>
         </div>
       </div>
 
-      {error && <div className="mb-6 rounded-xl bg-rose-50 text-rose-700 px-4 py-3 text-sm">{error}</div>}
+      {error && <div className="mb-6 rounded-control bg-danger-surface text-danger px-4 py-3 text-meta">{error}</div>}
 
       {loading && !analysis ? (
         <div className="grid place-items-center py-24 text-brand-600">

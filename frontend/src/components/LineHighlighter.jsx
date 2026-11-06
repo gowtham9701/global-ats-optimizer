@@ -2,10 +2,10 @@ import { motion } from 'framer-motion'
 import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 
 const STYLES = {
-  good: { bg: 'bg-emerald-50', border: 'border-emerald-400', text: 'text-emerald-700', Icon: CheckCircle2 },
-  warn: { bg: 'bg-amber-50', border: 'border-amber-400', text: 'text-amber-700', Icon: AlertTriangle },
-  bad: { bg: 'bg-rose-50', border: 'border-rose-400', text: 'text-rose-700', Icon: XCircle },
-  neutral: { bg: 'bg-card', border: 'border-line-input', text: 'text-muted', Icon: null },
+  good: { bg: 'bg-success-surface', border: 'border-line', text: 'text-success', Icon: CheckCircle2 },
+  warn: { bg: 'bg-warning-surface', border: 'border-line', text: 'text-warning', Icon: AlertTriangle },
+  bad: { bg: 'bg-danger-surface', border: 'border-line', text: 'text-danger', Icon: XCircle },
+  neutral: { bg: 'bg-card', border: 'border-line', text: 'text-muted', Icon: null },
 }
 
 export default function LineHighlighter({ lines = [] }) {
