@@ -9,9 +9,9 @@ const LABELS = {
 }
 
 function barColor(v) {
-  if (v >= 80) return 'bg-emerald-500'
-  if (v >= 60) return 'bg-amber-500'
-  return 'bg-rose-500'
+  if (v >= 80) return 'bg-status-accepted'
+  if (v >= 60) return 'bg-status-offer'
+  return 'bg-status-rejected'
 }
 
 export default function ScoreBars({ breakdown }) {

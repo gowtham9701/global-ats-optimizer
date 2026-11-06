@@ -124,7 +124,7 @@ export default function Dashboard() {
           <button
             onClick={downloadPdf}
             disabled={downloading}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 shadow-lg shadow-brand-600/30"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-semibold hover:bg-primary-hover "
           >
             {downloading ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />} Download PDF
           </button>
@@ -223,7 +223,7 @@ export default function Dashboard() {
                 <button
                   onClick={runLocalize}
                   disabled={localizing}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-600 text-white font-semibold hover:bg-brand-700"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-hover"
                 >
                   {localizing ? <Loader2 size={18} className="animate-spin" /> : <Globe2 size={18} />}
                   Convert to {targetCountry}

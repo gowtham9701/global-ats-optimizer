@@ -18,8 +18,8 @@
   --muted: #69655d;
   --faint: #a29d94;
 
-  --primary: #222222;
-  --primary-hover: #3a3936;
+  --primary: #2f5a52;
+  --primary-hover: #26483f;
   --on-primary: #fbfaf7;
 
   --line: rgb(29 28 26 / 0.10);
@@ -60,9 +60,9 @@
   --muted: #aaa59c;
   --faint: #6e6961;
 
-  --primary: #ebe7df;
-  --primary-hover: #ffffff;
-  --on-primary: #1d1c1a;
+  --primary: #78b2a6;
+  --primary-hover: #8cc3b7;
+  --on-primary: #141311;
 
   --line: rgb(240 237 231 / 0.10);
   --line-strong: rgb(240 237 231 / 0.22);
